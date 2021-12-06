@@ -1,0 +1,54 @@
+"hl1coop"
+{
+	"base"			"base"
+	"title"			"Half-Life Co-op"
+	"category"		"pve"
+	"menusystem"	"1"
+	"workshopid"	"1590755372"
+	
+	"settings"
+	{
+		1
+		{
+			"name"		"hl1_coop_speedrunmode"
+			"text"		"Speedrun Mode"
+			"help"		"Speedrun mode with some features"
+			"type"		"CheckBox"
+			"default"	"0"
+			"singleplayer" "1"
+		}
+		2
+		{
+			"name"		"hl1_coop_sv_survival"
+			"text"		"Survival Mode"
+			"help"		"Survival mode"
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		3
+		{
+			"name"		"hl1_coop_sv_custommodels"
+			"text"		"Custom player models"
+			"help"		"Allow custom player models"
+			"type"		"CheckBox"
+			"default"	"0"
+			"singleplayer" "1"
+		}
+		4
+		{
+			"name"		"hl1_coop_sv_chatsounds"
+			"text"		"Enable chatsounds"
+			"help"		""
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		5
+		{
+			"name"		"hl1_coop_sv_friendlyfire"
+			"text"		"Friendly fire"
+			"help"		"Allow friendly fire"
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+	}
+}
