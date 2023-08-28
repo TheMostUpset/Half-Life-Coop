@@ -1,13 +1,14 @@
 MAP = {}
 DEFAULT_PLAYERMODEL_PATH = Model("models/player/coop/helmet.mdl")
 
-PRICE_RESPAWN_HERE = 100
-PRICE_RESPAWN_FULL = 500
-PRICE_LAST_CHECKPOINT = 50
-
 LAST_CHECKPOINT_MINDISTANCE = 1500 -- used for "teleport to checkpoint" thingy
 
 IMPORTANT_NPC_HP_SCALE = 4
+
+BIND_VOTE_YES = KEY_F1
+BIND_VOTE_NO = KEY_F2
+BIND_THIRDPERSON = KEY_F3
+BIND_QUICKMENU = KEY_F4
 
 DeriveGamemode("base")
 include("sh_chatsounds.lua")
@@ -49,10 +50,25 @@ end)
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.6.3.2"
+GM.Version = "1.7"
 GM.Cooperative = true
-GM.Changelog = [[- Fixed overriding bullet callback function
-- Fix for MW2019 unnecessary sprint animation]]
+GM.Changelog = [[- Added 1 HP mode
+- Added German language (thanks to Christian Maubach)
+- Added player nickname on their weaponbox
+- Added support for custom lang files
+- Added hl1_coop_sv_transparentplayers convar
+- Added hl1coop_npcrepl_ichthyosaur convar
+- Added ability to respawn for score in survival mode
+- Added Break input and OnBreak output on func_pushable
+- Reimagined lobby menu
+- Prices for respawn options moved to hl1_coop_price_* convars
+- F1-F4 keys do not rely on default gmod binds anymore
+- Fixed some health chargers not working
+- Fixed taking falldamage at the beginning of hls09
+- Fixed Gonarch spit always hitting trigger_gravity on hls14a
+- Fixed not giving score for damaging Gonarch with shotgun
+- Fixed NPCs being invisible in Crack Mode
+- Minor fixes]]
 
 COOP_STATE_FIRSTLOAD = 0
 COOP_STATE_TRANSITION = 1
@@ -62,6 +78,12 @@ COOP_STATE_ENDTITLES = 4
 
 PLAYER_NOTREADY = 1
 PLAYER_READY = 2
+
+cvar_price_respawn_here = CreateConVar("hl1_coop_price_respawn_here", 100, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, 'How much score "Respawn here with 25 hp" costs')
+cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn with full loadout costs")
+cvar_price_respawn_survival = CreateConVar("hl1_coop_price_respawn_survival", 400, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn in survival mode costs")
+cvar_price_movetocheckpoint = CreateConVar("hl1_coop_price_movetocheckpoint", 50, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score teleporting to last checkpoint costs")
+-- cvar_award_teammaterevive = CreateConVar("hl1_coop_award_teammaterevive", 50, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "")
 
 hl1_coop_sv_friendlyfire = CreateConVar("hl1_coop_sv_friendlyfire", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow friendly fire", 0, 1)
 local hl1_coop_sv_custommodels = CreateConVar("hl1_coop_sv_custommodels", 0, {FCVAR_ARCHIVE, FCVAR_REPLICATED, FCVAR_NOTIFY}, "Allow custom player models", 0, 1)
@@ -156,6 +178,10 @@ end
 
 function GM:GetCrackMode()
 	return GetGlobalBool("CrackMode")
+end
+
+function GM:Get1hpMode()
+	return GetGlobalBool("1hpMode")
 end
 
 function FormattedTimer(t)
@@ -273,7 +299,7 @@ function GM:OnEntityCreated(ent)
 					end)
 				end
 				self:FixCollisionBounds(ent, "monster_houndeye", Vector(-16, -16, 0), Vector(16, 16, 40))
-				self:FixCollisionBounds(ent, "monster_bigmomma", Vector(-24, -24, 0), Vector(24, 24, 130))
+				self:FixCollisionBounds(ent, "monster_bigmomma", Vector(-32, -32, 0), Vector(32, 32, 130))
 				self:FixCollisionBounds(ent, "monster_apache", Vector(-256, -256, -64), Vector(256, 256, 100))
 				if monsterDeadTable and monsterDeadTable[ent:GetClass()] then
 					timer.Simple(0, function()
@@ -604,6 +630,7 @@ function GM:SetupMove(ply, move, cmd)
 		end
 	end
 	
+	-- gravity prediction fix
 	if SERVER then
 		local grav = ply:GetGravity()
 		if grav != ply:GetNWFloat("Gravity") then
@@ -688,7 +715,7 @@ function GM:FindUseEntity(ply, ent)
 		end
 	end
 	if IsValid(ent) and ent.MaxUseDistance then
-		local dist = ent:GetPos():DistToSqr(ply:EyePos())
+		local dist = ent:WorldSpaceCenter():DistToSqr(ply:EyePos())
 		if dist > ent.MaxUseDistance then
 			ent = NULL
 		end
@@ -811,6 +838,36 @@ function GM:PlayerSwitchWeapon(ply, oldWep, newWep)
 		
 		if self:GetCrackMode() then
 			hook.Run("CrackModeWeaponSwitch", newWep)
+		end
+	end
+end
+
+function GM:PlayerButtonDown(ply, button)
+	if game.SinglePlayer() and SERVER or CLIENT then
+		if button == BIND_VOTE_YES then
+			if IsFirstTimePredicted() then RunConsoleCommand("vote_yes") end
+		elseif button == BIND_VOTE_NO then
+			if IsFirstTimePredicted() then RunConsoleCommand("vote_no") end
+		elseif button == BIND_THIRDPERSON then
+			if CLIENT then
+				if IsFirstTimePredicted() then 
+					if cvar_thirdperson:GetBool() then
+						cvar_thirdperson:SetBool(false)
+						ChatMessage(LangString("chatmsg_thirdperson_off"), 5)
+					else
+						cvar_thirdperson:SetBool(true)
+						ChatMessage(LangString("chatmsg_thirdperson_on"), 5)
+					end
+				end
+			else
+				if GetConVar("hl1_coop_cl_thirdperson"):GetBool() then
+					RunConsoleCommand("hl1_coop_cl_thirdperson", "0")
+				else
+					RunConsoleCommand("hl1_coop_cl_thirdperson", "1")
+				end
+			end
+		elseif button == BIND_QUICKMENU then
+			if IsFirstTimePredicted() then RunConsoleCommand("hl1_coop_quickmenu") end
 		end
 	end
 end

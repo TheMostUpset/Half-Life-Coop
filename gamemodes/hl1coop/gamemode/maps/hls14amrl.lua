@@ -62,6 +62,10 @@ function MAP:FixMapEntities()
 	for k, v in pairs(ents.FindByName("mammagibs")) do
 		v:SetKeyValue("m_flGibLife", "30")
 	end
+	-- removing trigger_gravity as it causes issues (e.g. bigmomma spit)
+	for k, v in pairs(ents.FindByClass("trigger_gravity")) do
+		v:Remove()
+	end
 end
 
 function MAP:ModifyMapEntities()
@@ -121,4 +125,5 @@ end
 
 function MAP:OnPlayerSpawn(ply)
 	ply:SetLongJump(true, true)
+	ply:SetGravity(0.5)
 end

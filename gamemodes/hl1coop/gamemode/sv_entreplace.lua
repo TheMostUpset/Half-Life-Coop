@@ -63,7 +63,8 @@ local NPCReplaceTable = {
 	["monster_gman"] = "hl1coop_npcrepl_gman",
 	["monster_cockroach"] = "hl1coop_npcrepl_cockroach",
 	["monster_apache"] = "hl1coop_npcrepl_apache",
-	["monster_osprey"] = "hl1coop_npcrepl_osprey"
+	["monster_osprey"] = "hl1coop_npcrepl_osprey",
+	["monster_ichthyosaur"] = "hl1coop_npcrepl_ichthyosaur"
 }
 for k, v in pairs(NPCReplaceTable) do
 	CreateConVar(v, "", FCVAR_ARCHIVE)

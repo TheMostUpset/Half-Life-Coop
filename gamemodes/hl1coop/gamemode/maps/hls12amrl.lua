@@ -90,7 +90,7 @@ end
 
 local tele1pos = Vector(835, 1000, 665)
 local tele2pos = Vector(-2950, 1945, -555)
-local tele3pos = Vector(-655, 1255, -1870)
+local tele3pos = Vector(-933, 957, -1915)
 
 function MAP:CreateMapEventCheckpoints(ent, activator)
 	if ent:GetName() == "hitsmm" then

@@ -225,6 +225,6 @@ function ENT:DoFire(owner, tr)
 	if tr.HitNormal:Length() == 0 then
 		efpos = efpos + Vector(0,0,128)
 	end
-	self:ExplosionEffects(efpos, tr.HitNormal, 63)
+	self:ExplosionEffects(efpos + tr.HitNormal * 4, tr.HitNormal, 63)
 	hook.Run("OnEntityExplosion", self, tr.HitPos, 350, self.impulse)
 end

@@ -69,6 +69,7 @@ for wep, icon in pairs(killics) do
 	killicon.Add(wep, "hl1/icons/"..icon, Color(255, 150, 50, 255))
 end
 
+local cvar_showhints = CreateClientConVar("hl1_coop_cl_showhints", 1, true, false, "Enable hints for noobs", 0, 1)
 local cvar_showscore = CreateClientConVar("hl1_coop_cl_showscore", 1, true, false, "Show score points popup")
 local ScreenMessageScore
 local ScreenMessageScoreText
@@ -118,25 +119,26 @@ end
 
 function GM:ScreenHintTable()
 	local t = {
-		[1] = lang.hint_longjump,
-		[2] = lang.hint_quitchase,
+		[1] = "hint_longjump",
+		[2] = "hint_quitchase",
 		[3] = "Press "..GetKeyFromBind("+jump").." for\nfirst person cam",
-		[4] = lang.hint_medkituse
+		[4] = "hint_medkituse"
 		-- [5] is reserved
 	}
 	return t
 end
 
 function GM:PlayerShowScreenHint(int, delay)
-	if IsValid(LocalPlayer()) and cvars.Bool("hl1_coop_cl_showhints") and !self:PlayerHasSeenHint(int) then
+	if IsValid(LocalPlayer()) and cvar_showhints:GetBool() and !self:PlayerHasSeenHint(int) then
 		if int == 5 and CanReachNearestTeleport() then
-			hintText = lang.hint_lastcheckpoint
+			hintText = "hint_lastcheckpoint"
 		else
 			hintText = hook.Run("ScreenHintTable")[int]
 		end
 
 		if !hintText then return end
 		
+		hintText = LangString(hintText)
 		hintDelay = delay
 		hintTime = RealTime() + hintDelay
 		hintX, hintY = ScrW(), ScrH() / 1.5
@@ -152,7 +154,7 @@ local hintTopTime = RealTime()
 local hintTopDelay = 0
 local hintTopX, hintTopY = 0, 0
 net.Receive("ShowScreenHintTop", function()
-	local text = net.ReadString()
+	local text = net.ReadTable()
 	local delay = net.ReadFloat()
 	GAMEMODE:PlayerShowScreenHintTop(text, delay)
 end)
@@ -170,17 +172,18 @@ local worldHintTime = RealTime()
 net.Receive("ShowTeleportHint", function()
 	if IsValid(LocalPlayer()) then
 		telePosTable = net.ReadTable()
-		if cvars.Bool("hl1_coop_cl_showhints") and !GAMEMODE:PlayerHasSeenHint(0) then
+		if cvar_showhints:GetBool() and !GAMEMODE:PlayerHasSeenHint(0) then
 			worldHintTime = RealTime() + 15
 		end
 	end
 end)
 
+local cvar_subtitles = CreateClientConVar("hl1_coop_cl_subtitles", 1, true, false, "Enable subtitles", 0, 1)
 local caption_text = {}
 local lineCountS = 0
 local caption_h_lerp = 0
 function GM:ShowCaption(sentence)
-	if !cvars.Bool("hl1_coop_cl_subtitles", false) then return end
+	if !cvar_subtitles:GetBool() or !lang then return end
 	local text = lang.subtitleTable[sentence]
 	if text then
 		local caption_color = {140, 140, 140}
@@ -307,7 +310,7 @@ cyan
 Novel
 Lyokanthrope
 Sonador
-
+akronman1
 
 
 
@@ -436,17 +439,17 @@ function HintFrameColor(alpha)
 end
 
 local function kewlText( text, font, x, y, color, align, align_y )
-
+	text = LangString(text)
 	align_y = align_y or 0
 
     draw.SimpleText( text, font, x+1, y+1, Color(0,0,0,color.a/1.5), align, align_y )
     draw.SimpleText( text, font, x+2, y+2, Color(0,0,0,color.a/2), align, align_y )
     draw.SimpleText( text, font, x+3, y+3, Color(0,0,0,color.a/4), align, align_y )
     draw.SimpleText( text, font, x, y, color, align, align_y )
-
 end
 
 local function kewlDrawText(text, font, x, y, color, align)
+	text = LangString(text)
     draw.DrawText( text, font, x+1, y+1, Color(0,0,0,color.a/1.5), align, align_y )
     draw.DrawText( text, font, x+2, y+2, Color(0,0,0,color.a/2), align, align_y )
     draw.DrawText( text, font, x+3, y+3, Color(0,0,0,color.a/4), align, align_y )
@@ -526,6 +529,7 @@ function GM:HUDDrawTargetID()
 	end
 end
 
+local cvar_drawhalos = CreateClientConVar("hl1_coop_cl_drawhalos", 1, true, false, "Draw player halos", 0, 1)
 local haloPlyTable = {}
 
 function GM:HUDDrawPlayerDistance()
@@ -579,7 +583,7 @@ function GM:HUDDrawPlayerDistance()
 					
 					kewlDrawText(pl:GetName().."\n"..dist_m.."m", "HL1Coop_text", text_x, text_y, col, TEXT_ALIGN_CENTER)
 				
-					if cvars.Bool("hl1_coop_cl_drawhalos") and dist_m <= 40 then
+					if cvar_drawhalos:GetBool() and dist_m <= 40 then
 						if pl:Alive() then
 							haloPlyTable[k] = pl
 						else
@@ -638,7 +642,7 @@ function GM:HUDDrawWorldHint()
 				end
 				--local col = Color(255, 200, 0, worldHintAlpha)
 				surface.SetFont("MenuFont")
-				local text = lang.hint_teleport
+				local text = LangString("hint_teleport")
 				local textWidth, textHeight = surface.GetTextSize(text)
 				local rectWidth = textWidth + 32
 				local gap = 32
@@ -738,6 +742,11 @@ function GM:HUDDrawVote()
 			voteNameAdd = "(causes map restart)"
 		elseif voteType == "survivalmode" then
 			voteType = "survival mode"
+		elseif voteType == "1hpmode" then
+			voteType = "1 hp mode"
+			if voteName == "0" then
+				voteNameAdd = "(causes map restart)"
+			end
 		elseif voteType == "friendlyfire" then
 			voteType = "friendly fire"
 		end
@@ -751,7 +760,7 @@ function GM:HUDDrawVote()
 	surface.SetFont("HL1Coop_vote")
 	local yes, no = GetGlobalInt("VoteNumYes"), GetGlobalInt("VoteNumNo")
 	local vtime = math.Round(math.max(GetGlobalInt("VoteTime") - CurTime(), 0))
-	local votetext = lang.hud_vote..":".." "..vtime.."s "..lang.hud_voteleft.."\n"..voteType.." "..voteName.."\n"..voteNameAdd
+	local votetext = LangString("hud_vote")..":".." "..vtime.."s "..LangString("hud_voteleft").."\n"..voteType.." "..voteName.."\n"..voteNameAdd
 	local vtext_w, vtext_h = surface.GetTextSize(votetext)
 	local vcol = Color(255, 210, 50, 220)
 	local rectG = 20
@@ -776,10 +785,10 @@ function GM:HUDDrawVote()
 	surface.SetMaterial(vote_yes)
 	surface.DrawTexturedRect(yes_x, icon_y, icon_scale, icon_scale)
 	draw.OutlinedBox(yes_x - 2, icon_y - 2, icon_scale + 4, icon_scale + 4, 1, icon_frame_col)
-	kewlText(yes.." ("..GetKeyFromBind("gm_showhelp")..")", "HL1Coop_vote", yes_x + icon_text + text_w / 2, icon_y + icon_scale / 2, icon_frame_col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	kewlText(yes.." ("..input.GetKeyName(BIND_VOTE_YES)..")", "HL1Coop_vote", yes_x + icon_text + text_w / 2, icon_y + icon_scale / 2, icon_frame_col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	
 	local no_x = frame_w + frame_x - text_w / 2 - frame_g
-	kewlText(no.." ("..GetKeyFromBind("gm_showteam")..")", "HL1Coop_vote", no_x, icon_y + icon_scale / 2, icon_frame_col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	kewlText(no.." ("..input.GetKeyName(BIND_VOTE_NO)..")", "HL1Coop_vote", no_x, icon_y + icon_scale / 2, icon_frame_col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	surface.SetDrawColor(255, 255, 255, 255)
 	surface.SetMaterial(vote_no)
 	surface.DrawTexturedRect(no_x - text_w / 2 - icon_text, icon_y, icon_scale, icon_scale)
@@ -814,6 +823,7 @@ end
 local ctime = RealTime()
 local caption_alpha = 0
 function GM:HUDDrawCaptions()
+	local font = lang and lang.subtitleFont or "default"
 	local cstime = 0
 	local caption_w = 0
 	local caption_h = 0
@@ -862,7 +872,7 @@ function GM:HUDDrawCaptions()
 			end
 			for l, t in pairs(ctable) do
 				local s = l - 1
-				kewlText(t, lang.subtitleFont, caption_x, caption_y + (s + v[8]) * ctext_h, Color(ccol[1], ccol[2], ccol[3], 255 * alpha), TEXT_ALIGN_LEFT)
+				kewlText(t, font, caption_x, caption_y + (s + v[8]) * ctext_h, Color(ccol[1], ccol[2], ccol[3], 255 * alpha), TEXT_ALIGN_LEFT)
 			end
 			--v[8] = Lerp(FrameTime() * 20, v[8], lineCount)
 			v[8] = math.Approach(v[8], lineCount, FT * 8)
@@ -903,7 +913,7 @@ function GM:EndTitles()
 		surface.SetFont(font)
 		
 		local text = self.CreditsTextStart.."\n\n"
-		if lang.credits_translationby and utf8.len(lang.credits_translationby) > 0 then text = text..lang.credits_translationby.."\n\n" end
+		if lang and lang.credits_translationby and utf8.len(lang.credits_translationby) > 0 then text = text..lang.credits_translationby.."\n\n" end
 		text = text.."\n"..self.CreditsTextEnd
 		
 		local textWidth, textHeight = surface.GetTextSize(text)
@@ -1052,14 +1062,14 @@ function GM:HUDDrawSpectatorStuff(ply)
 			end
 			if ply:IsDeadInSurvival() then
 				if !IsValid(spectarget) then
-					kewlDrawText(lang.hud_surv_norespawns, "HL1Coop_text", ScrW() / 2, pos1, Color(255,200,0,alpha), TEXT_ALIGN_CENTER)
+					kewlDrawText("hud_surv_norespawns", "HL1Coop_text", ScrW() / 2, pos1, Color(255,200,0,alpha), TEXT_ALIGN_CENTER)
 				end
 			elseif ply:CanJoinGame() then
-				kewlText(lang.hud_pressesc, "HL1Coop_text", ScrW() / 2, pos2, Color(255,200,0,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+				kewlText("hud_pressesc", "HL1Coop_text", ScrW() / 2, pos2, Color(255,200,0,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 			end
 		end
 		if IsValid(spectarget) and !ply:IsDeadInSurvival() then
-			kewlText(lang.hud_specmode, "Trebuchet24", ScrW() / 2, 4, Color(200,200,200,180), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+			kewlText("hud_specmode", "Trebuchet24", ScrW() / 2, 4, Color(200,200,200,180), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 		end
 		
 		local font = "Trebuchet24"
@@ -1124,7 +1134,7 @@ function GM:HUDDrawBottomText(ply)
 			if spt > 0 then
 				local sptR = math.Round(spt, 1)
 				local alpha = math.Clamp(spt * 1000 - 30, 0, 120)
-				kewlText(lang.hud_spawnprotection..": "..sptR, "Trebuchet24", ScrW() / 2, ScrH() - 8, Color(200,200,200,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+				kewlText(LangString("hud_spawnprotection")..": "..sptR, "Trebuchet24", ScrW() / 2, ScrH() - 8, Color(200,200,200,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
 			end
 		end
 	elseif GetGlobalBool("DisablePlayerRespawn") then
@@ -1145,7 +1155,7 @@ function GM:HUDDrawWaitTimer()
 		end
 		local alpha = math.Clamp(wtime * 1000, 0, 255)
 		surface.SetFont("HL1Coop_text")
-		local text = lang.hud_waitingforplayersc..": "..wtimeR
+		local text = LangString("hud_waitingforplayersc")..": "..wtimeR
 		kewlText(text, "HL1Coop_text", ScrW() / 2, 24, Color(255,210,50,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 		local textWidth, textHeight = surface.GetTextSize(text)
 		
@@ -1185,6 +1195,7 @@ function GM:HUDDrawWaitTimer()
 	end
 end
 
+local lobbyBackground = Material("vgui/gradient-d")
 function GM:HUDPaint()
 	local ply = LocalPlayer()
 	
@@ -1282,7 +1293,10 @@ function GM:HUDPaint()
 	hook.Run("HUDDrawWaitTimer")
 	
 	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then
-		hook.Run("HUDDrawChangelog")
+		surface.SetMaterial(lobbyBackground)
+		surface.SetDrawColor(25, 15, 0, 210)
+		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+		-- hook.Run("HUDDrawChangelog")
 	end
 
 	if GAMEMODE:GetCoopState() == COOP_STATE_TRANSITION then 
@@ -1292,7 +1306,7 @@ function GM:HUDPaint()
 		end
 		local alpha = math.sin(RealTime() * 10) * 30 + 220
 		if CONNECTING_PLAYERS_TABLE and #CONNECTING_PLAYERS_TABLE > 0 or hook.Run("GetActivePlayersNumber") == 0 then
-			kewlText(lang.hud_waitingforplayers, "HL1Coop_msg", ScrW() / 2, ScrH() / 2, Color(255,230,140,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			kewlText("hud_waitingforplayers", "HL1Coop_msg", ScrW() / 2, ScrH() / 2, Color(255,230,140,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			--kewlText(math.Round(GetGlobalFloat("FirstWaitingTime") - CurTime(), 1), "Trebuchet24", ScrW() / 2, 8, Color(255,230,140,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 			if CONNECTING_PLAYERS_TABLE then
 				local gap = 32
@@ -1304,7 +1318,7 @@ function GM:HUDPaint()
 				end
 			end
 		else
-			kewlText(lang.hud_getready, "HL1Coop_msg", ScrW() / 2, ScrH() / 2, Color(255,230,140,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			kewlText("hud_getready", "HL1Coop_msg", ScrW() / 2, ScrH() / 2, Color(255,230,140,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 	end
 end

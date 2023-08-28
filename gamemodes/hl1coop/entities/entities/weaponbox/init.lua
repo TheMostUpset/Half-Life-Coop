@@ -46,6 +46,11 @@ function ENT:Initialize()
 	self:UseTriggerBounds(true, 16)
 	
 	self.Pickable = true
+	
+	local owner = self:GetOwner()
+	if IsValid(owner) and owner:IsPlayer() then
+		self:SetOwnerNick(owner:Nick())
+	end
 end
 
 function ENT:SetWeaponTable(t)

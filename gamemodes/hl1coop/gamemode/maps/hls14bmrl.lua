@@ -51,6 +51,10 @@ function MAP:FixMapEntities()
 			fTrig:SetCollisionBounds(v:GetCollisionBounds())
 		end
 	end
+	-- removing trigger_gravity as it causes issues
+	for k, v in pairs(ents.FindByClass("trigger_gravity")) do
+		v:Remove()
+	end
 end
 
 function MAP:ModifyMapEntities()
@@ -77,4 +81,5 @@ end
 
 function MAP:OnPlayerSpawn(ply)
 	ply:SetLongJump(true, true)
+	ply:SetGravity(0.5)
 end

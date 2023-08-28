@@ -10,7 +10,7 @@
 	{
 		1
 		{
-			"name"		"hl1_coop_speedrunmode"
+			"name"		"hl1_coop_mode_speedrun"
 			"text"		"Speedrun Mode"
 			"help"		"Speedrun mode with some features"
 			"type"		"CheckBox"
@@ -19,9 +19,9 @@
 		}
 		2
 		{
-			"name"		"hl1_coop_sv_survival"
+			"name"		"hl1_coop_mode_survival"
 			"text"		"Survival Mode"
-			"help"		"Survival mode"
+			"help"		"Survival mode with limited respawns"
 			"type"		"CheckBox"
 			"default"	"0"
 		}
@@ -49,6 +49,38 @@
 			"help"		"Allow friendly fire"
 			"type"		"CheckBox"
 			"default"	"0"
+		}
+		6
+		{
+			"name"		"hl1_coop_price_respawn_here"
+			"text"		"Price: Respawn with 25 hp"
+			"help"		"How much score 'Respawn here with 25 hp' costs"
+			"type"		"Numeric"
+			"default"	"100"
+		}
+		7
+		{
+			"name"		"hl1_coop_price_respawn_full"
+			"text"		"Price: Respawn with full loadout"
+			"help"		"How much score respawn with full loadout costs"
+			"type"		"Numeric"
+			"default"	"500"
+		}
+		8
+		{
+			"name"		"hl1_coop_price_movetocheckpoint"
+			"text"		"Price: Move to last checkpoint"
+			"help"		"How much score teleporting to last checkpoint costs"
+			"type"		"Numeric"
+			"default"	"50"
+		}
+		9
+		{
+			"name"		"hl1_coop_price_respawn_survival"
+			"text"		"Price: Respawn in Survival mode"
+			"help"		"How much score respawn in survival mode costs"
+			"type"		"Numeric"
+			"default"	"400"
 		}
 	}
 }

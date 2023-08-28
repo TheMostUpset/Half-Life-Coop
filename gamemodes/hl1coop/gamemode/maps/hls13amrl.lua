@@ -146,6 +146,6 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 end
 
 function MAP:OnMapRestart()
-	table.Merge(self.ImportantNPCs, importantNPCtable)
+	if self.ImportantNPCs then table.Merge(self.ImportantNPCs, importantNPCtable) end
 	SetGlobalBool("DisablePlayerRespawn", false)
 end

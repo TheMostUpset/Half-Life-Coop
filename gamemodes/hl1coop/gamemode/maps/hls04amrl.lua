@@ -61,7 +61,7 @@ end
 
 function MAP:OperateMapEvents(ent, input, caller, activator)
 	if ent:GetClass() == "scripted_sentence" and ent:GetName() == "c1a3deadtalk" then
-		for _, npc in pairs(ents.FindInSphere(Vector(1440, -904, -128), 8)) do
+		for _, npc in ipairs(ents.FindInSphere(Vector(1440, -904, -128), 8)) do
 			if npc:IsNPC() and npc:GetClass() == "monster_human_grunt" then
 				npc:SetAngles(Angle(0, 207, 0))
 			end
@@ -80,7 +80,32 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 	if ent:GetClass() == "path_track" and ent:GetName() == "lift02c" and input == "InPass" then
 		local pos = Vector(175, -870, 1290)
 		local ang = Angle(0, 180, 0)
-		GAMEMODE:Checkpoint(2, pos, ang, {tele1pos, elev_tele2pos}, activator, "weapon_mp5")
+		local trig = function()
+			local triggersExist
+			for k, v in ipairs(ents.FindInSphere(Vector(59, -1114, 1261), 32)) do
+				if v:GetClass() == "trigger_once" then
+					triggersExist = true
+					v:Remove()
+				end
+			end
+			if triggersExist then
+				local spawner = ents.FindByName("osprey_t")[1]
+				if IsValid(spawner) then
+					spawner:Fire("ForceSpawn")
+				end
+				timer.Simple(0, function()
+					local osprey = ents.FindByName("osprey1")[1]
+					if IsValid(osprey) then
+						osprey:Fire("Activate")
+					end
+				end)
+				local music = ents.FindByName("music_track_2")[1]
+				if IsValid(music) then
+					music:Fire("PlaySound")
+				end
+			end
+		end
+		GAMEMODE:Checkpoint(2, pos, ang, {tele1pos, elev_tele2pos}, activator, "weapon_mp5", nil, trig)
 	end
 	
 	if IsValid(caller) and caller:GetClass() == "trigger_once" and ent:GetClass() == "func_door" and ent:GetName() == "sl10_door" and input == "Close" then

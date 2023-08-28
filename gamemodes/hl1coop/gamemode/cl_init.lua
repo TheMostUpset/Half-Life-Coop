@@ -28,7 +28,16 @@ function GetKeyFromBind(bind, bind1)
 	return string.upper(bind)
 end
 
+local function LoadCustomLangFile(lang)	
+	local path = "hl1coop/lang/"
+	local langFiles = file.Find(path.."*_"..lang..".lua", "LUA")
+	for k, v in ipairs(langFiles) do
+		include(path..v)
+		print("Loaded custom language file: "..path..v)
+	end
+end
 include("lang/lang_en.lua")
+LoadCustomLangFile("en")
 local lang_cvar = CreateClientConVar("hl1_coop_cl_lang", "", true)
 function GM:GetLanguage()
 	return lang_cvar:GetString()
@@ -38,57 +47,80 @@ function GM:IsLanguageSet()
 end
 function GM:SetLanguage(newlang)
 	local path = self.FolderName.."/gamemode/lang/lang_"
-	include(path.."en.lua")
+	include(path.."en.lua")	
 	if newlang != "" and newlang != "en" then
 		local lang_file = path..newlang..".lua"
 		if file.Exists(lang_file, "LUA") then
 			include(lang_file)
 		end
 	end
+	
+	LoadCustomLangFile("en")
+	LoadCustomLangFile(newlang)
 end
 cvars.AddChangeCallback("hl1_coop_cl_lang", function(cvar, old, new)
 	GAMEMODE:SetLanguage(new)
 end)
-local lang_file = "lang/lang_"..lang_cvar:GetString()..".lua"
-if file.Exists(GM.FolderName.."/gamemode/"..lang_file, "LUA") then
-	include(lang_file)
+if lang_cvar:GetString() != "en" then
+	local lang_file = "lang/lang_"..lang_cvar:GetString()..".lua"
+	if file.Exists(GM.FolderName.."/gamemode/"..lang_file, "LUA") then
+		include(lang_file)
+	end
+	LoadCustomLangFile(lang_cvar:GetString())
+end
+
+function LangString(str)
+	-- if !lang then
+		-- print("ERROR: Language table not found!")
+	-- elseif !lang[str] then
+		-- print("WARNING: Language string not found: "..str)
+	-- else
+		-- return lang[str]
+	-- end
+	return lang and lang[str] or str
 end
 
 function ConvertToLang(msg)
+	local str = msg
+	if istable(msg) then
+		str = msg[1]
+	end
 	if lang then
-		if string.find(msg, "#") then
-			local msg_t = string.Explode(" ", msg)
-			if #msg_t > 0 then
-				for i = 1, #msg_t do
-					local langtext = string.Replace(msg_t[i], "#", "")
+		if string.find(str, "#") then
+			local str_t = string.Explode(" ", str)
+			if #str_t > 0 then
+				for i = 1, #str_t do
+					local langtext = string.Replace(str_t[i], "#", "")
 					if lang[langtext] then
-						msg_t[i] = lang[langtext]
+						str_t[i] = lang[langtext]
 					else
-						local msg_n = string.Split(msg_t[i], "\n")
-						if msg_n and istable(msg_n) and #msg_n > 0 then
-							for i = 1, #msg_n do
-								local langtext = string.Replace(msg_n[i], "#", "")
+						local str_n = string.Split(str_t[i], "\n")
+						if str_n and istable(str_n) and #str_n > 0 then
+							for i = 1, #str_n do
+								local langtext = string.Replace(str_n[i], "#", "")
 								if lang[langtext] then
-									msg_n[i] = lang[langtext]
+									str_n[i] = lang[langtext]
 								end
 							end
-							msg_t[i] = table.concat(msg_n, "\n")
+							str_t[i] = table.concat(str_n, "\n")
 						end
 					end
 				end
 			end
-			msg = table.concat(msg_t, " ")
+			str = table.concat(str_t, " ")
+			if istable(msg) and #msg > 1 then
+				for i = 2, #msg do
+					str = str:gsub("%%" .. i-1 .. "%%", msg[i])
+				end
+			end
 		end
 	end
-	return msg
+	return str
 end
 
 CreateClientConVar("hl1_coop_cl_autoswitch", 1, true, true, "Enable weapon autoswitch on pickup", 0, 1)
-CreateClientConVar("hl1_coop_cl_drawhalos", 1, true, false, "Draw player halos", 0, 1)
 CreateClientConVar("hl1_coop_cl_playermodel", "Helmet (HLS)", true, true, "Player model")
 CreateClientConVar("hl1_coop_cl_playercolor", "", true, true, "Player model color")
-CreateClientConVar("hl1_coop_cl_showhints", 1, true, false, "Enable hints for noobs", 0, 1)
-CreateClientConVar("hl1_coop_cl_subtitles", 1, true, false, "Enable subtitles", 0, 1)
 cvar_thirdperson = CreateClientConVar("hl1_coop_cl_thirdperson", 0, false, false, "Enable third person view", 0, 1)
 cvar_showtriggers = CreateClientConVar("_hl1coop_showtriggers", 0, false, false, nil, 0, 1)
 cvar_showclips = CreateClientConVar("_hl1coop_showclips", 0, false, false, nil, 0, 1)
@@ -169,12 +201,20 @@ function ChatMessage(text, Type)
 		col = Color(0, 200, 255) -- blue, vote
 	elseif Type == 4 then
 		col = Color(255, 70, 60) -- red, warnings or errors
+	elseif Type == 5 then
+		col = Color(220, 190, 80) -- pale yellow, other chat notifications
 	end
 	chat.AddText(col, text)
+	
+	if hook.Run("IsLobbyChatValid") then
+		local lobbyChat = GAMEMODE.LobbyChat
+		lobbyChat.richText:InsertColorChange(col.r, col.g, col.b, 255)
+		lobbyChat.richText:AppendText(text.."\n")
+	end
 end
 
 net.Receive("ChatMessage", function()
-	local text = net.ReadString()
+	local text = net.ReadTable()
 	text = ConvertToLang(text)
 	local Type = net.ReadUInt(4)
 	ChatMessage(text, Type)
@@ -335,20 +375,20 @@ local function HLSContentCheck(delay)
 	end
 end
 
-local bindDefKeys = {
-	["gm_showhelp"] = "F1",
-	["gm_showteam"] = "F2",
-	["gm_showspare1"] = "F3",
-	["gm_showspare2"] = "F4"
-}
+-- local bindDefKeys = {
+	-- ["gm_showhelp"] = "F1",
+	-- ["gm_showteam"] = "F2",
+	-- ["gm_showspare1"] = "F3",
+	-- ["gm_showspare2"] = "F4"
+-- }
 
-local function CheckBinds()
-	for k, v in SortedPairsByValue(bindDefKeys) do
-		if GetKeyFromBind(k) == "NO KEY" then
-			ChatMessage("WARNING! "..k.." is not bound! Expected key: "..v, 4)
-		end
-	end
-end
+-- local function CheckBinds()
+	-- for k, v in SortedPairsByValue(bindDefKeys) do
+		-- if GetKeyFromBind(k) == "NO KEY" then
+			-- ChatMessage("WARNING! "..k.." is not bound! Expected key: "..v, 4)
+		-- end
+	-- end
+-- end
 
 local initCallSuccess
 
@@ -385,7 +425,7 @@ function GM:InitPostEntity()
 	end
 	
 	HLSContentCheck()
-	CheckBinds()
+	-- CheckBinds()
 	
 	hook.Run("FixMapSpecular")
 end
@@ -427,7 +467,7 @@ function GM:Think()
 		print("InitPostEntity called from Think!")
 	end
 	
-	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD and !self:IsStartMenuOpen() and !self:IsLanguageMenuOpen() then
+	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD and !self:IsStartMenuOpen() and !self:IsLanguageMenuOpen() and !gui.IsGameUIVisible() then
 		hook.Run("OpenStartMenu")
 	end
 
@@ -443,8 +483,7 @@ function GM:Think()
 	end
 end
 
-function GM:OnPlayerChat( ply, strText, bTeamOnly, bPlayerIsDead )
-
+function GM:OnPlayerChat(ply, strText, bTeamOnly, bPlayerIsDead)	
 	local tab = {}
 
 	if IsValid(ply) then
@@ -472,9 +511,24 @@ function GM:OnPlayerChat( ply, strText, bTeamOnly, bPlayerIsDead )
 
 	table.insert( tab, color_white )
 	table.insert( tab, ": " .. strText )
-
+	
 	chat.AddText( unpack(tab) )
+	
 	--surface.PlaySound( "common/menu2.wav" )
+	
+	if hook.Run("IsLobbyChatValid") then
+		local col = self:GetTeamColor(ply)
+		local lobbyChat = self.LobbyChat
+		lobbyChat.richText:InsertColorChange(col.r, col.g, col.b, 255)
+		lobbyChat.richText:AppendText(ply:Nick())
+
+		lobbyChat.richText:InsertColorChange(255, 255, 255, 255)
+		lobbyChat.richText:AppendText(": "..strText.."\n")
+		
+		if hook.Run("IsLobbyChatVisible") then
+			surface.PlaySound("common/menu2.wav")
+		end
+	end
 	
 	strText = string.lower(strText)
 	if string.StartWith(strText, "!") or string.StartWith(strText, "/") then
@@ -483,7 +537,6 @@ function GM:OnPlayerChat( ply, strText, bTeamOnly, bPlayerIsDead )
 	end
 
 	return true
-
 end
 
 function GM:OnChatCommand(command)
@@ -531,6 +584,7 @@ function GM:HUDShouldDraw(name)
 		elseif name == "CHudDamageIndicator" then return ply:Team() != TEAM_SPECTATOR and ply:Team() != TEAM_UNASSIGNED
 		elseif hudHide[name] then return !ply:IsChasing() end
 	end
+	if name == "CHudChat" then return !hook.Run("IsLobbyChatVisible") end
 	return !hudAlwaysHide[name]
 end
 
@@ -610,14 +664,9 @@ function GM:PlayerBindPress(ply, bind, pressed)
 		if !self.IsSandboxDerived then
 			RunConsoleCommand("callmedic")
 		end
-	elseif bind == "gm_showspare1" then
-		if cvar_thirdperson:GetBool() then
-			cvar_thirdperson:SetBool(false)
-		else
-			cvar_thirdperson:SetBool(true)
-		end
-	elseif bind == "gm_showspare2" then
-		RunConsoleCommand("hl1_coop_quickmenu")
+	end	
+    if bind == "messagemode" or bind == "messagemode2" then
+		return hook.Run("IsLobbyChatVisible")
 	end
 end
 

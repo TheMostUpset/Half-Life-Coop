@@ -2,11 +2,13 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 
 ENT.Radius = 600
+ENT.UpdateTime = .5
 
 function ENT:Initialize()
 	self:SetNoDraw(true)
 	self:SetSolid(SOLID_NONE)
-	for k, v in pairs(ents.FindInSphere(self.NPCPos, 100)) do
+	if !self.NPCPos then self.NPCPos = self:GetPos() end
+	for k, v in ipairs(ents.FindInSphere(self.NPCPos, 100)) do
 		if v:GetClass() == "monster_tentacle" then
 			v:SetSaveValue("m_hDamageFilter", NULL)
 			self.NPC = v
@@ -34,7 +36,7 @@ end
 
 function ENT:Think()
 	if IsValid(self.NPC) then
-		for k, v in pairs(ents.FindInSphere(self:GetPos(), self.Radius)) do
+		for k, v in ipairs(ents.FindInSphere(self:GetPos(), self.Radius)) do
 			if v:IsPlayer() then
 				local vel = v:GetVelocity()
 				if v:OnGround() and vel:Length() > 200 then
@@ -46,6 +48,6 @@ function ENT:Think()
 		self:Remove()
 	end
 	
-	self:NextThink(CurTime() + .5)
+	self:NextThink(CurTime() + self.UpdateTime)
 	return true
 end

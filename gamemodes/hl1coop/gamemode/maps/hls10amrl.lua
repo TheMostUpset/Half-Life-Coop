@@ -35,6 +35,12 @@ function MAP:OperateMapEvents(ent, input)
 	end
 end
 
+function MAP:FixMapEntities()
+	-- removing singleplayer entity as we have same thing already in gamemode
+	local del = ents.FindByName("dead_ms")[1]
+	if IsValid(del) then del:Remove() end
+end
+
 function MAP:ModifyMapEntities()
 	local fTrig = ents.Create("hl1_trigger_func")
 	if IsValid(fTrig) then

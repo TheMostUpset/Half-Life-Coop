@@ -19,6 +19,12 @@ MAP.FallToDeath = {
 function MAP:CreateViewPoints()
 	GAMEMODE:CreateViewPointEntity(Vector(-1692, 3278, 76), Angle(20, -45, 0))
 	GAMEMODE:CreateViewPointEntity(Vector(563, -822, -362), Angle(35, -145, 0))
+	
+	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then
+		for k, v in pairs(ents.FindByClass("monster_bullchicken")) do
+			v:Remove()
+		end
+	end
 end
 
 local tele0pos = Vector(-1931, 3095, -60)
@@ -45,6 +51,19 @@ function MAP:CreateMapCheckpoints()
 	GAMEMODE:CreateCheckpointTrigger(7, Vector(8399, 11005, -2954), Vector(8879, 11086, -2804), Vector(8340, 10775, -3470), Angle(), {tele0pos, tele2pos, tele3pos, tele4pos, tele5pos, tele6pos})
 end
 
+hook.Add("Modify1hpModeEntities", "1hpFixFallDamage", function()	
+	local fTrig = ents.Create("hl1_trigger_func")
+	if IsValid(fTrig) then
+		fTrig.TouchFunction = function(ply)
+			if ply:GetVelocity()[3] < -700 then
+				ply:SetVelocity(Vector(0, 0, 540))
+			end
+		end
+		fTrig:Spawn()
+		fTrig:SetCollisionBoundsWS(Vector(12186, 10592, -4150), Vector(12536, 10100, -4130))
+	end
+end)
+
 function MAP:FixMapEntities()	
 	for k, v in pairs(ents.FindByName("tent_barney2")) do
 		v:Remove()
@@ -70,7 +89,7 @@ function MAP:ModifyMapEntities()
 		mins, maxs = e_mins, e_maxs
 	end
 	
-	local wt = GAMEMODE:CreateWaitTrigger(mins, maxs, 30, false, func, WAIT_FREE, true)
+	local wt = GAMEMODE:CreateWaitTrigger(mins, maxs, 30, false, func, WAIT_FREE)
 	if !GAMEMODE:GetSpeedrunMode() and IsValid(wt) then
 		function wt:StartTouch(ent)
 			if ent:IsPlayer() and ent:Alive() then

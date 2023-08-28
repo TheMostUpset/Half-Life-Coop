@@ -166,7 +166,7 @@ function GM:CalcModelSelectView(ply, pos, ang, fov)
 	local screenAR = ScrW() / ScrH()
 	local tr = util.TraceHull({
 		start = pos,
-		endpos = pos - ang:Forward() * 28 * screenAR - ang:Up() * 25 + ang:Right() * 20 * screenAR,
+		endpos = pos - ang:Forward() * 2800/fov * screenAR - ang:Up() * 25 + ang:Right() * 20 * screenAR,
 		filter = ply,
 		mins = Vector(-5, -5, -5),
 		maxs = Vector(5, 5, 5),

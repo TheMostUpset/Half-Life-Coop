@@ -16,7 +16,7 @@ AddCSLuaFile("hl1_soundscripts.lua")
 AddCSLuaFile("conflictfix.lua")
 
 local lang_files = file.Find(GM.FolderName.."/gamemode/lang/*", "LUA")
-for k, v in pairs(lang_files) do
+for k, v in ipairs(lang_files) do
 	AddCSLuaFile("lang/"..v)
 end
 
@@ -163,6 +163,7 @@ include("sv_vote.lua")
 include("sv_resource.lua")
 
 util.AddNetworkString("HL1DeathMenu")
+util.AddNetworkString("HL1DeathMenuRemove")
 util.AddNetworkString("HL1StartMenu")
 util.AddNetworkString("HL1ChapterPreStart")
 util.AddNetworkString("HL1ChapterStart")
@@ -244,9 +245,10 @@ end)
 
 local cvar_debug = CreateConVar("_hl1coop_debug", 0, FCVAR_ARCHIVE, "Print debug info in console", 0, 1)
 --CreateConVar("hl1_coop_limitedrespawns", 1, FCVAR_NOTIFY, "Limited continues")
-local cvar_speedrun = CreateConVar("hl1_coop_speedrunmode", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
-local cvar_survival = CreateConVar("hl1_coop_sv_survival", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
-local cvar_crack = CreateConVar("hl1_coop_crackmode", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
+local cvar_speedrun = CreateConVar("hl1_coop_mode_speedrun", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
+local cvar_survival = CreateConVar("hl1_coop_mode_survival", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
+local cvar_crack = CreateConVar("hl1_coop_mode_crack", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
+local cvar_1hp = CreateConVar("hl1_coop_mode_1hp", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
 cvar_afktime = CreateConVar("hl1_coop_sv_afktime", 300, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Move AFK player to spectators after the time in seconds", 0)
 local cvar_gainnpchp = CreateConVar("hl1_coop_sv_gainnpchealth", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable increasing NPC health depending on player count", 0, 1)
 local cvar_plygib = CreateConVar("hl1_coop_sv_playergib", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow player gibbing on high damage", 0, 1)
@@ -259,6 +261,7 @@ cvar_hevvoice = CreateConVar("hl1_coop_sv_hevvoice", 1, {FCVAR_ARCHIVE, FCVAR_NO
 local cvar_assistpoints = CreateConVar("hl1_coop_sv_assistpoints", 1, FCVAR_NOTIFY, "Give assist score points depending on damage to NPC", 0, 1)
 local cvar_checkpoints = CreateConVar("hl1_coop_sv_checkpoints", 1, FCVAR_NOTIFY, "Enable co-op checkpoints", 0, 1)
 local cvar_unreadykicktime = CreateConVar("hl1_coop_sv_unreadykicktime", 60, FCVAR_ARCHIVE, "Time in seconds to kick unready player in lobby", 0, 999)
+cvar_transparentplayers = CreateConVar("hl1_coop_sv_transparentplayers", 1, FCVAR_ARCHIVE, "Make players transparent when touching wait triggers", 0, 1)
 
 GM.ReturnToReadyScreenTime = 120 -- when no players on server, it automatically returns to ready screen
 GM.FirstSpawnAsSpectator = true
@@ -292,17 +295,23 @@ function GM:GlobalTextMessageCenter(msg, delay)
 end
 
 function GM:GlobalScreenHintTop(text, delay)
+	if !istable(text) then
+		text = {text}
+	end
 	delay = delay or 8
 	net.Start("ShowScreenHintTop")
-	net.WriteString(text)
+	net.WriteTable(text)
 	net.WriteFloat(delay)
 	net.Broadcast()
 end
 
 function ChatMessage(msg, t)
+	if !istable(msg) then
+		msg = {msg}
+	end
 	t = t or 1
 	net.Start("ChatMessage")
-	net.WriteString(msg)
+	net.WriteTable(msg)
 	net.WriteUInt(t, 4)
 	net.Broadcast()
 end
@@ -354,6 +363,13 @@ function GM:Initialize()
 			PrintMessage(HUD_PRINTTALK, "HALF-LIFE SWEPS ADDON IS NOT INSTALLED! GAMEMODE IS UNPLAYABLE!")
 		end)
 	end
+end
+
+function GM:ShutDown()
+	-- revert to default values
+	RunConsoleCommand("sv_airaccelerate", "10")
+	RunConsoleCommand("sv_gravity", "600")
+	RunConsoleCommand("func_breakdmg_club", "1.5")
 end
 
 function GM:SetCoopState(int)
@@ -570,6 +586,9 @@ function GM:InitPostEntity(restart)
 			self:SetCrackMode(true)
 			hook.Run("RestartMap")
 		end
+		if cvar_1hp:GetBool() then
+			self:Set1hpMode(true)
+		end
 	end
 end
 
@@ -706,7 +725,9 @@ function GM:ReviveDeadPlayers(pos, ang, weptable)
 	end
 	for k, v in pairs(team.GetPlayers(TEAM_COOP)) do
 		if v:IsDeadInSurvival() then
-			v.KilledByFall = nil
+			net.Start("HL1DeathMenuRemove")
+			net.Send(v)
+			v:ResetVars(true)
 			hook.Call("PlayerLoadout", GAMEMODE, v)
 			v:Spawn()
 			local vecrand = VectorRand() * 96
@@ -769,7 +790,7 @@ function GM:Checkpoint(cpNum, dest, ang, telePos, ply, weptable, delay, func)
 		end
 	end
 	if IsValid(ply) and ply:IsPlayer() then
-		ChatMessage(ply:Nick().." ".."#game_checkpointpl", 2)
+		ChatMessage({"#game_checkpointpl", ply:Nick()}, 2)
 	else
 		ChatMessage("#game_checkpoint", 2)
 	end
@@ -794,7 +815,7 @@ function GM:Checkpoint(cpNum, dest, ang, telePos, ply, weptable, delay, func)
 	
 	for k, v in pairs(hook.Run("GetActivePlayersTable")) do
 		--print(v, dest:Distance(v:GetPos()))
-		if v:GetScore() >= PRICE_LAST_CHECKPOINT and dest:Distance(v:GetPos()) > LAST_CHECKPOINT_MINDISTANCE then
+		if v:GetScore() >= cvar_price_movetocheckpoint:GetInt() and dest:Distance(v:GetPos()) > LAST_CHECKPOINT_MINDISTANCE then
 			v:SendScreenHint(5)
 			v.CanTeleportTime = CurTime() + 15
 			v:SendLua("LocalPlayer().CanTeleportTime = CurTime() + 15")
@@ -846,7 +867,7 @@ function GM:GameFinished()
 end
 
 function GM:PlayerHasFinishedMap(ply)
-	if cvars.Bool("sv_cheats") or self:GetCrackMode() or self.IsSandboxDerived then return end
+	if cvars.Bool("sv_cheats") or self:GetCrackMode() or self.IsSandboxDerived or self:Get1hpMode() then return end
 	local fTime = CurTime() - GetGlobalFloat("SpeedrunModeTime")
 	if fTime > 0 and !ply.HasFinishedMap then
 		ply.HasFinishedMap = true
@@ -886,8 +907,11 @@ function GM:PlayerHasFinishedMap(ply)
 			net.Send(ply)]]--
 		end
 		
-		bestTime = bestTime and ", personal best: "..string.FormattedTime(bestTime, "%02i:%02i.%02i") or ""
-		ChatMessage(ply:Nick().." has finished the map in "..Time..bestTime)
+		-- bestTime = bestTime and ", personal best: "..string.FormattedTime(bestTime, "%02i:%02i.%02i") or ""
+		-- ChatMessage(ply:Nick().." has finished the map in "..Time..bestTime)
+		local stradd = bestTime and "#game_personalbest" or ""
+		bestTime = bestTime and string.FormattedTime(bestTime, "%02i:%02i.%02i") or ""
+		ChatMessage({"#game_plfinishmap "..stradd, ply:Nick(), Time, bestTime})
 	end
 end
 
@@ -1141,20 +1165,18 @@ function GM:PlayerSpawn(ply)
 		return
 	end
 
-	if !self:GetSurvivalMode() then
-		if ply.DeathEnt and IsValid(ply.DeathEnt) then
-			ply:SetPos(ply.DeathEnt:GetPos() + ply.DeathPos)
-			ply:SetEyeAngles(ply.DeathAng)
-		elseif ply.DeathPos and ply.DeathAng then
-			ply:SetPos(ply.DeathPos)
-			ply:SetEyeAngles(ply.DeathAng)
-		end
-		if ply.DeathDuck then
-			ply:ConCommand("+duck")
-			timer.Simple(.1, function()
-				ply:ConCommand("-duck")
-			end)
-		end
+	if ply.DeathEnt and IsValid(ply.DeathEnt) then
+		ply:SetPos(ply.DeathEnt:GetPos() + ply.DeathPos)
+		ply:SetEyeAngles(ply.DeathAng)
+	elseif ply.DeathPos and ply.DeathAng then
+		ply:SetPos(ply.DeathPos)
+		ply:SetEyeAngles(ply.DeathAng)
+	end
+	if ply.DeathDuck then
+		ply:ConCommand("+duck")
+		timer.Simple(.1, function()
+			ply:ConCommand("-duck")
+		end)
 	end
 	
 	ply:UnSpectate()
@@ -1183,7 +1205,15 @@ function GM:PlayerSpawn(ply)
 	hook.Run("SendTeleportHint", ply)
 	
 	ply.DiedInSurvival = nil
+	ply:SendLua("LocalPlayer().DiedInSurvival = nil")
 	ply:ClearSuitMessages()
+	
+	if self:Get1hpMode() then
+		ply:SetMaxHealth(1)
+		ply:SetMaxArmor(0)
+		ply:SetHealth(1)
+		ply:SetArmor(0)
+	end
 end
 
 function GM:PlayerTick(ply, mv)
@@ -1209,7 +1239,7 @@ function GM:PlayerTick(ply, mv)
 		end
 		if SysTime() - ply.afkTime >= cvar_afktime:GetFloat() then
 			hook.Run("PlayerSpawnAsSpectator", ply)
-			ChatMessage(ply:Nick().." ".."#game_afkspec")
+			ChatMessage({"#game_afkspec", ply:Nick()})
 		end
 	end
 	
@@ -1287,14 +1317,14 @@ function GM:PostPlayerDeath(ply)
 	if hook.Run("GetSurvivalMode") and ply:Team() == TEAM_COOP then
 		local plyNum = hook.Run("GetActivePlayersNumber")
 		if plyNum == 1 then
-			timer.Simple(1, function()
+			timer.Create("NotifyLastAlivePlayer", 1, 1, function()
 				if hook.Run("GetActivePlayersNumber") == 1 then
 					local lastPly = self:GetActivePlayersTable()[1]
 					if IsValid(lastPly) and lastPly:Alive() then
 						lastPly:SendScreenHintTop("#notify_onlyyouleft")
 						for k, v in pairs(team.GetPlayers(TEAM_COOP)) do
 							if !v:Alive() then
-								v:SendScreenHintTop(lastPly:Nick().." ".."#notify_lastalive")
+								v:SendScreenHintTop({"#notify_lastalive", lastPly:Nick()})
 							end
 						end
 					end
@@ -1302,7 +1332,23 @@ function GM:PostPlayerDeath(ply)
 			end)
 		end
 		if plyNum == 0 then
-			hook.Run("GameOver")
+			local someoneCanRespawn = false
+			for k, v in ipairs(team.GetPlayers(TEAM_COOP)) do
+				if !v:Alive() and v:GetScore() >= cvar_price_respawn_survival:GetInt() then
+					net.Start("HL1DeathMenuRemove")
+					net.Send(v)
+					timer.Simple(1, function()
+						if IsValid(v) and !v:Alive() then
+							hook.Run("RespawnFunc", v, 2)
+						end
+					end)
+					someoneCanRespawn = true
+					break
+				end
+			end
+			if !someoneCanRespawn then
+				hook.Run("GameOver")
+			end
 		end
 	end
 end
@@ -1333,6 +1379,9 @@ function GM:GameStart()
 		self:SetCrackMode(true)
 	end
 	hook.Run("RestartMap")
+	if cvar_1hp:GetBool() then
+		self:Set1hpMode(true)
+	end
 	for k, pl in ipairs(player.GetAll()) do
 		if pl:Team() != TEAM_SPECTATOR then
 			hook.Run("PlayerInitialSpawn", pl)
@@ -1362,6 +1411,7 @@ function GM:GameRestart()
 		v:ConCommand("-duck")
 	end
 	SetGlobalFloat("GameTime", self:GetGameTime())
+	SetGlobalBool("ScreamLife", false)
 	hook.Run("GameStart")
 end
 
@@ -1381,7 +1431,7 @@ function GM:GameOver(skipfade, reason)
 	end)
 end
 
-cvars.AddChangeCallback("hl1_coop_speedrunmode", function(name, value_old, value_new)
+cvars.AddChangeCallback("hl1_coop_mode_speedrun", function(name, value_old, value_new)
 	value_new = tonumber(value_new)
 	if !isnumber(value_new) then return end
 	if value_new == 1 then
@@ -1410,7 +1460,7 @@ function GM:SetSurvivalMode(b, t)
 	end
 end
 
-cvars.AddChangeCallback("hl1_coop_sv_survival", function(name, value_old, value_new)
+cvars.AddChangeCallback("hl1_coop_mode_survival", function(name, value_old, value_new)
 	value_new = tonumber(value_new)
 	if !isnumber(value_new) then return end
 	if value_new == 1 then
@@ -1448,7 +1498,7 @@ function GM:SetSpeedrunMode(b, t)
 	end
 end
 
-cvars.AddChangeCallback("hl1_coop_crackmode", function(name, value_old, value_new)
+cvars.AddChangeCallback("hl1_coop_mode_crack", function(name, value_old, value_new)
 	value_new = tonumber(value_new)
 	if !isnumber(value_new) then return end
 	if value_new == 1 then
@@ -1482,6 +1532,70 @@ function GM:SetCrackMode(b)
 		end
 	end
 end
+
+function GM:Modify1hpModeEntities()
+	local items = ents.FindByClass("item_healthkit")
+	table.Add(items, ents.FindByClass("item_battery"))
+	table.Add(items, ents.FindByClass("func_healthcharger"))
+	table.Add(items, ents.FindByClass("func_recharge"))
+	for _, ent in ipairs(items) do
+		ent:Remove()
+	end
+	local weapons = GetHL1WeaponClassTable()
+	local crates = ents.FindByClass("func_breakable")
+	table.Add(crates, ents.FindByClass("func_pushable"))
+	table.Add(crates, ents.FindByClass("func_physbox"))
+	for _, ent in ipairs(crates) do
+		local spawnObj = ent:GetClass() == "func_pushable" and ent.spawnobject or ent:GetSaveTable().m_iszSpawnObject
+		if spawnObj == "item_battery" or spawnObj == "item_healthkit" then
+			local repl = weapons[math.random(1, #weapons)]
+			if repl then
+				if ent:GetClass() == "func_pushable" then
+					ent.spawnobject = repl
+				else
+					ent:SetSaveValue("m_iszSpawnObject", repl)
+				end
+			end
+		end
+	end
+end
+
+function GM:Set1hpMode(b, t)
+	if b then
+		self:SetGlobalBool("1hpMode", true)
+		PrintMessage(HUD_PRINTTALK, "1 HP mode is enabled!")
+		
+		hook.Run("Modify1hpModeEntities")
+		for _, ply in ipairs(player.GetAll()) do
+			ply:SetMaxHealth(1)
+			ply:SetMaxArmor(0)
+			ply:SetHealth(1)
+			ply:SetArmor(0)
+		end
+	else
+		self:SetGlobalBool("1hpMode", false)
+		PrintMessage(HUD_PRINTTALK, "1 HP mode is disabled")
+		for _, ply in ipairs(player.GetAll()) do
+			ply:SetMaxHealth(100)
+			ply:SetMaxArmor(100)
+		end
+	end
+end
+
+cvars.AddChangeCallback("hl1_coop_mode_1hp", function(name, value_old, value_new)
+	value_new = tonumber(value_new)
+	if !isnumber(value_new) then return end
+	if value_new == 1 then
+		if GAMEMODE:GetCoopState() != COOP_STATE_FIRSTLOAD then
+			GAMEMODE:Set1hpMode(true)
+		end
+	elseif value_new == 0 then
+		GAMEMODE:Set1hpMode(false)
+		if GAMEMODE:GetCoopState() == COOP_STATE_INGAME then
+			GAMEMODE:GameRestart()
+		end
+	end
+end)
 
 concommand.Add("allready", function(ply)
 	if IsValid(ply) and !ply:IsAdmin() then return end
@@ -1549,6 +1663,9 @@ function GM:Think()
 							self:SetCrackMode(true)
 						end
 						hook.Run("RestartMap")
+						if cvar_1hp:GetBool() then
+							self:Set1hpMode(true)
+						end
 						if MAP.ShowChapterTitle != false then
 							net.Start("HL1ChapterStart")
 							net.WriteFloat(delay)
@@ -1933,13 +2050,14 @@ function GM:PlayerDeathThink(pl)
 
 		if self:GetSurvivalMode() then
 			if !pl.DiedInSurvival then
-				pl:TextMessageCenter("#game_surv_norespawns", 3)
-				if pl.wboxEnt and IsValid(pl.wboxEnt) then
-					pl.wboxEnt:SetOwner(NULL)
-					pl.wboxEnt = nil
+				if pl:GetScore() < cvar_price_respawn_survival:GetInt() then
+					-- pl:TextMessageCenter("#game_surv_noscore", 3)
+					hook.Run("RespawnFunc", pl, 1)
+				else
+					net.Start("HL1DeathMenu")
+					net.WriteBool(true)
+					net.Send(pl)
 				end
-				hook.Run("StopPlayerChase", pl)
-				pl.DiedInSurvival = true
 			end
 		else
 			if pl:IsBot() then
@@ -1951,10 +2069,11 @@ function GM:PlayerDeathThink(pl)
 					if pl.KilledByFall or noRespawnOptions then
 						hook.Run("RespawnFunc", pl, 2)
 					else
-						if pl:GetScore() < PRICE_RESPAWN_HERE then
+						if pl:GetScore() < cvar_price_respawn_here:GetInt() then
 							hook.Run("RespawnFunc", pl, 2)
 						else
 							net.Start("HL1DeathMenu")
+							net.WriteBool(false)
 							net.Send(pl)
 						end
 					end
@@ -2199,37 +2318,69 @@ concommand.Add("_hl1_coop_ready", function(ply, cmd, args, argStr)
 end)
 
 function GM:RespawnFunc(ply, rtype)
-	if !ply or !IsValid(ply) or ply:Alive() or self:GetSurvivalMode() then return end
-	if rtype == 1 then
-		if !ply.KilledByFall then
-			local respawnPrice = PRICE_RESPAWN_HERE
-			if ply:GetScore() >= respawnPrice then
-				ply:AddScore(-respawnPrice)
-				ply:Spawn()
-				ply:SetHealth(25)
-				hook.Call("PlayerLoadout", self, ply, true) -- crowbar & pistol		
+	if !ply or !IsValid(ply) or ply:Alive() then return end
+	if !self:GetSurvivalMode() then
+		if rtype == 1 then
+			if !ply.KilledByFall then
+				local respawnPrice = cvar_price_respawn_here:GetInt()
+				if ply:GetScore() >= respawnPrice then
+					ply:AddScore(-respawnPrice)
+					ply:Spawn()
+					local hp = math.min(ply:GetMaxHealth(), 25)
+					ply:SetHealth(hp)
+					hook.Call("PlayerLoadout", self, ply, true) -- crowbar & pistol
+				else
+					ply:PrintMessage(HUD_PRINTCONSOLE, "Not enough score!")
+				end
+			end
+		else
+			ply:ResetVars()
+			if rtype == 3 and !MAP.DisableFullRespawn then
+				local respawnPrice = cvar_price_respawn_full:GetInt()
+				if ply:GetScore() >= respawnPrice then
+					ply:AddScore(-respawnPrice)
+					hook.Call("PlayerLoadout", self, ply)
+				else
+					ply:PrintMessage(HUD_PRINTCONSOLE, "Not enough score!")
+					return
+				end
 			else
-				ply:PrintMessage(HUD_PRINTCONSOLE, "Not enough score!")
+				hook.Call("PlayerLoadout", self, ply, true) -- crowbar & pistol
+			end
+			ply:Spawn()
+			if IsValid(ply.wboxEnt) then
+				ply.wboxEnt:SetOwner(NULL)
+				ply.wboxEnt = nil
 			end
 		end
 	else
-		ply:ResetVars()
-		if rtype == 3 and !MAP.DisableFullRespawn then
-			local respawnPrice = PRICE_RESPAWN_FULL
+		if rtype == 2 then
+			if ply.KilledByFall then
+				ply:ResetVars() -- removing last death pos so we can spawn at actual player start
+			end
+			local respawnPrice = cvar_price_respawn_survival:GetInt()
 			if ply:GetScore() >= respawnPrice then
 				ply:AddScore(-respawnPrice)
-				hook.Call("PlayerLoadout", self, ply)
+				ply:Spawn()
+				local hp = math.min(ply:GetMaxHealth(), 100)
+				ply:SetHealth(hp)
+				hook.Call("PlayerLoadout", self, ply, true) -- crowbar & pistol
+				
+				timer.Remove("NotifyLastAlivePlayer")
+				for k, v in pairs(team.GetPlayers(TEAM_COOP)) do
+					v:SendScreenHintTop({"#notify_respawned", ply:Nick()})
+				end
 			else
 				ply:PrintMessage(HUD_PRINTCONSOLE, "Not enough score!")
-				return
 			end
 		else
-			hook.Call("PlayerLoadout", self, ply, true) -- crowbar & pistol
-		end
-		ply:Spawn()
-		if IsValid(ply.wboxEnt) then
-			ply.wboxEnt:SetOwner(NULL)
-			ply.wboxEnt = nil
+			if ply.wboxEnt and IsValid(ply.wboxEnt) then
+				ply.wboxEnt:SetOwner(NULL)
+				ply.wboxEnt = nil
+			end
+			hook.Run("StopPlayerChase", ply)
+			ply.DiedInSurvival = true
+			ply:SendLua("LocalPlayer().DiedInSurvival = true")
 		end
 	end
 end
@@ -2491,6 +2642,7 @@ function GM:PlayerDisconnected(ply)
 	hook.Run("VotePlayerDisconnected", ply)
 end
 
+-- stops other players chasing ply
 function GM:StopPlayerChase(ply)
 	for k, v in ipairs(player.GetHumans()) do
 		if v != ply then
@@ -2805,15 +2957,16 @@ function GM:EntityTakeDamage(ent, dmginfo)
 			end
 			if ent:Health() > 1 then
 				if IsValid(attacker) and attacker:IsPlayer() then
-					local score = math.floor(dmginfo:GetDamage() / 16)
-					local scoreMul = self.NPCScorePriceDamageMul[ent:GetClass()]
-					if scoreMul then
-						score = score * scoreMul
-					end
+					local score = math.floor(dmginfo:GetDamage()) / 16
 					if score > 0 then
 						score = math.max(score, 1)
+						local scoreMul = self.NPCScorePriceDamageMul[ent:GetClass()]
+						if scoreMul then
+							score = score * scoreMul
+						end
+						score = math.Round(score)
+						attacker:AddScore(score)
 					end
-					attacker:AddScore(score)
 				end
 			end
 		end
@@ -2895,7 +3048,6 @@ concommand.Add("hl1_coop_give", function(ply, cmd, args)
 end)
 
 concommand.Add("hl1_coop_impulse101", function(ply, cmd, args)
-
 	if ply and IsValid(ply) and (!ply:IsSuperAdmin() or !ply:Alive()) then return end
 	
 	if args[1] then
@@ -2908,7 +3060,31 @@ concommand.Add("hl1_coop_impulse101", function(ply, cmd, args)
 	end
 
 	hook.Run("Impulse101", ply)
+end)
 
+concommand.Add("hl1_coop_addscore", function(ply, cmd, args)
+	if IsValid(ply) and !ply:IsAdmin() then return end
+	local score = tonumber(args[1])
+	local nick = args[2]
+	if nick then
+		local giveTo
+		for k, v in ipairs(player.GetAll()) do
+			if v:Nick():lower() == nick:lower() then
+				giveTo = v
+				break
+			end
+		end
+		if giveTo then
+			ply = giveTo
+		else
+			print("Player "..nick.." has not been found")
+			return
+		end
+	end
+	if score then
+		ply:AddScore(score)
+		print(ply:Nick().." got "..score.." score")
+	end
 end)
 
 concommand.Add("game_restart", function(ply, cmd, args)
@@ -2982,14 +3158,6 @@ function GM:TransitPlayers(maptochange, leveltransition)
 	end
 end
 
-function GM:ShowHelp(ply)
-    ply:ConCommand("vote_yes")
-end
-
-function GM:ShowTeam(ply)
-	ply:ConCommand("vote_no")
-end
-
 concommand.Add("dropweapon", function(ply)
 	if IsValid(ply) and ply:Alive() then
 		local actwep = ply:GetActiveWeapon()
@@ -3044,7 +3212,7 @@ concommand.Add("lastcheckpoint", function(ply, cmd, args, argStr)
 		return
 	end
 	if ply.CanTeleportTime and ply.CanTeleportTime > CurTime() and LAST_CHECKPOINT.Pos:Distance(ply:GetPos()) > LAST_CHECKPOINT_MINDISTANCE then
-		local price = PRICE_LAST_CHECKPOINT
+		local price = cvar_price_movetocheckpoint:GetInt()
 		if ply:GetScore() < price then
 			ply:PrintMessage(HUD_PRINTCONSOLE, "Not enough score!")
 			return

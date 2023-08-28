@@ -68,6 +68,22 @@ function MAP:CreateMapEventCheckpoints(ent, activator)
 	end
 end
 
+local function FixCrates()
+	for k, v in ipairs(ents.FindInBox(Vector(2721, -3198, -736), Vector(2464, -3012, -577))) do
+		if v:GetClass() == "func_breakable" then
+			v:SetSaveValue("m_takedamage", 0)
+			v:SetKeyValue("spawnflags", 0)
+		end
+	end
+end
+
+hook.Add("Modify1hpModeEntities", "1hpFixCrates", FixCrates)
+hook.Add("OnSkillLevelChange", "FixCrates", function(skill)
+	if skill > 3 then
+		FixCrates()
+	end
+end)
+
 local tank_breakable
 function MAP:FixMapEntities()
 	for k, v in pairs(ents.FindByClass("func_breakable")) do
@@ -170,7 +186,7 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 			activator = act_owner
 		end
 		local name = activator:IsPlayer() and activator:Nick() or activator:GetClass()
-		ChatMessage(name.." ".."#game_explosiontrig", 2)
+		ChatMessage({"#game_explosiontrig", name}, 2)
 	end
 	if class == "env_shake" and name == "leveldead_shake1" then
 		GAMEMODE:GameOver(true)
@@ -188,7 +204,7 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 end
 
 function MAP:OnMapRestart()
-	if !table.HasValue(self.ImportantNPCs, "barney1") then
+	if self.ImportantNPCs and !table.HasValue(self.ImportantNPCs, "barney1") then
 		table.insert(self.ImportantNPCs, "barney1")
 	end
 	expTrig = nil

@@ -87,7 +87,7 @@ ENT.pSoundsGlassBreak = {
 	"debris/bustglass2.wav",
 }
 
-function ENT:KeyValue( k, v )
+function ENT:KeyValue(k, v)
 	if k == "model" then
 		self.Model = v
 	end
@@ -96,8 +96,7 @@ function ENT:KeyValue( k, v )
 	end
 	if k == "friction" then
 		self.friction = v
-	end
-	
+	end	
 	if k == "spawnobject" then
 		if v != "0" then
 			local num = tonumber(v)
@@ -107,6 +106,9 @@ function ENT:KeyValue( k, v )
 				self.spawnobject = v
 			end
 		end
+	end
+	if k == "OnBreak" then
+		self:StoreOutput(k, v)
 	end
 	--print(k,v)
 end
@@ -362,15 +364,21 @@ function ENT:OnTakeDamage(dmginfo)
 
 		self:SetHealth(self:Health() - flDamage)
 		if self:Health() <= 0 then
-			self.entKilled = true
-			self:Killed(dmginfo:GetDamageForce(), self.GibAmount)
-			self:Die()
-			self:Remove()
+			self:Break(dmginfo:GetDamageForce())
 			return
 		end
 		
 		self:DamageSound()
 	end
+end
+
+function ENT:Break(force)
+	force = force or Vector()
+	self.entKilled = true
+	self:Killed(force, self.GibAmount)
+	self:Die()
+	self:TriggerOutput("OnBreak")
+	self:Remove()
 end
 
 function ENT:Die()
@@ -407,4 +415,10 @@ function ENT:Killed(force, amount)
 	effectdata:SetNormal(force)
 	effectdata:SetScale(amount)
 	util.Effect("hl1_gib_emitter", effectdata, true)
+end
+
+function ENT:AcceptInput(input, activator, caller, data)
+	if input == "Break" then
+		self:Break()
+	end
 end

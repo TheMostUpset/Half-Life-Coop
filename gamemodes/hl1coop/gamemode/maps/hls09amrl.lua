@@ -34,6 +34,30 @@ function MAP:CreateMapEventCheckpoints(ent, activator)
 	end
 end
 
+function MAP:FixMapEntities()
+	local fTrigPipe = ents.Create("hl1_trigger_func")
+	if IsValid(fTrigPipe) then
+		fTrigPipe.TouchFunction = function(ply)
+			if ply:GetVelocity()[3] < -500 then
+				ply:SetVelocity(Vector(0, 0, 250))
+			end
+		end
+		fTrigPipe:Spawn()
+		fTrigPipe:SetCollisionBoundsWS(Vector(-2784, 72, 170), Vector(-2888, 184, 190))
+	end
+	
+	local fTrigSpawn = ents.Create("hl1_trigger_func")
+	if IsValid(fTrigSpawn) then
+		fTrigSpawn.TouchFunction = function(ply)
+			if ply:GetVelocity()[3] < -500 then
+				ply:SetVelocity(Vector(0, 0, 250))
+			end
+		end
+		fTrigSpawn:Spawn()
+		fTrigSpawn:SetCollisionBoundsWS(Vector(-2600, 380, 492), Vector(-2643, 338, 495))
+	end
+end
+
 local noCutscene
 local plyTelePos = Vector(-2624, 376, 645)
 local plySpawnPos = plyTelePos - Vector(0, 0, 1)

@@ -2,7 +2,8 @@ local cvar_voteEnable = CreateConVar("hl1_coop_sv_vote_enable", 1, {FCVAR_ARCHIV
 local cvar_voteSpec = CreateConVar("hl1_coop_sv_vote_allowspectators", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow spectators to vote")
 local cvar_voteAllowBan = CreateConVar("hl1_coop_sv_vote_allowban", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow voting to ban player")
 local cvar_voteAllowKick = CreateConVar("hl1_coop_sv_vote_allowkick", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow voting to kick player")
-local cvar_voteTime = CreateConVar("hl1_coop_sv_vote_time", 30, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
+local cvar_voteTime = CreateConVar("hl1_coop_sv_vote_time", 30, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Vote time in seconds")
+local cvar_voteCoolDown = CreateConVar("hl1_coop_sv_vote_cooldown", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Time in seconds before allow player to vote again")
 
 local sndVoteStart = "ambient/alarms/warningbell1.wav"
 local sndVotePassed = "friends/friend_join.wav"
@@ -21,9 +22,17 @@ function GM:VoteTypesTable()
 		["speedrunmode"] = "",
 		["survivalmode"] = "",
 		["crackmode"] = "",
+		["1hpmode"] = "",
 		["skiptripmines"] = ""
 	}
 	return voteTypes
+end
+
+function GM:OnAdminKickAttempt(kicker, plyAdmin)
+	--kicker:ChatMessage("Fuck you")
+end
+function GM:OnAdminBanAttempt(baner, plyAdmin)
+	--baner:ChatMessage("Fuck you again")
 end
 
 local voteExecuteDelay = 3
@@ -62,15 +71,19 @@ local function VoteEnd(result, nomsg)
 			end)
 		elseif voteType == "speedrunmode" then
 			timer.Simple(voteExecuteDelay, function()
-				RunConsoleCommand("hl1_coop_speedrunmode", GetGlobalString("VoteName"))
+				RunConsoleCommand("hl1_coop_mode_speedrun", GetGlobalString("VoteName"))
 			end)
 		elseif voteType == "survivalmode" then
 			timer.Simple(voteExecuteDelay, function()
-				RunConsoleCommand("hl1_coop_sv_survival", GetGlobalString("VoteName"))
+				RunConsoleCommand("hl1_coop_mode_survival", GetGlobalString("VoteName"))
 			end)
 		elseif voteType == "crackmode" then
 			timer.Simple(voteExecuteDelay, function()
-				RunConsoleCommand("hl1_coop_crackmode", GetGlobalString("VoteName"))
+				RunConsoleCommand("hl1_coop_mode_crack", GetGlobalString("VoteName"))
+			end)
+		elseif voteType == "1hpmode" then
+			timer.Simple(voteExecuteDelay, function()
+				RunConsoleCommand("hl1_coop_mode_1hp", GetGlobalString("VoteName"))
 			end)
 		elseif voteType == "restart" then
 			timer.Simple(voteExecuteDelay, function()
@@ -114,7 +127,7 @@ function GM:VoteCancel(ply)
 	end
 	VoteEnd(0, true)
 	if IsValid(ply) then
-		ChatMessage(ply:Nick() .. " " .. "#vote_plyvetoed", 3)
+		ChatMessage({"#vote_plyvetoed", ply:Nick()}, 3)
 	else
 		ChatMessage("#vote_canceled", 3)
 	end
@@ -257,8 +270,8 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 				if string.lower(v:Nick()) != string.lower(voteName) then
 					notvalid = true
 				else
-					if v:IsSuperAdmin() or v:IsAdmin() then
-						--ply:ChatMessage("Fuck you")
+					if v:IsAdmin() then
+						hook.Run("OnAdminKickAttempt", ply, v)
 						return
 					end
 					notvalid = nil
@@ -280,7 +293,7 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 			local playercheck = Player(plyid)
 			if IsValid(playercheck) then
 				if playercheck:IsAdmin() then
-					--ply:ChatMessage("Fuck you")
+					hook.Run("OnAdminKickAttempt", ply, playercheck)
 					return
 				end
 				SetGlobalString("VoteName", plyid)
@@ -296,7 +309,11 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 			local plyid = tonumber(voteName)
 			local playercheck = Player(plyid)
 			if IsValid(playercheck) then
-				if playercheck:IsAdmin() or playercheck == ply then
+				if playercheck == ply then
+					return
+				end
+				if playercheck:IsAdmin() then
+					hook.Run("OnAdminBanAttempt", ply, playercheck)
 					return
 				end
 				SetGlobalString("VoteName", plyid)
@@ -333,19 +350,25 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 				SetGlobalString("VoteName", "1")
 			end
 		elseif voteType == "speedrunmode" then
-			if cvars.Bool("hl1_coop_speedrunmode") then
+			if cvars.Bool("hl1_coop_mode_speedrun") then
 				SetGlobalString("VoteName", "0")
 			else
 				SetGlobalString("VoteName", "1")
 			end
 		elseif voteType == "survivalmode" then
-			if cvars.Bool("hl1_coop_sv_survival") then
+			if cvars.Bool("hl1_coop_mode_survival") then
 				SetGlobalString("VoteName", "0")
 			else
 				SetGlobalString("VoteName", "1")
 			end
 		elseif voteType == "crackmode" then
-			if cvars.Bool("hl1_coop_crackmode") then
+			if cvars.Bool("hl1_coop_mode_crack") then
+				SetGlobalString("VoteName", "0")
+			else
+				SetGlobalString("VoteName", "1")
+			end
+		elseif voteType == "1hpmode" then
+			if cvars.Bool("hl1_coop_mode_1hp") then
 				SetGlobalString("VoteName", "0")
 			else
 				SetGlobalString("VoteName", "1")
@@ -378,7 +401,7 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 			end
 		end
 		ply.voteOption = 1
-		ply.NextVote = CurTime() + 60
+		ply.NextVote = CurTime() + cvar_voteCoolDown:GetFloat()
 		
 		if player.GetCount() > 1 then
 			net.Start("PlayClientSound")

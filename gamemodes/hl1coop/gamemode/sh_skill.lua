@@ -372,6 +372,9 @@ function GM:CanChangeSkillLevel()
 	return true
 end
 
+function GM:OnSkillLevelChange(new, old)
+end
+
 function GM:AdjustWallChargers()
 	local t = ents.FindByClass("func_recharge")
 	table.Add(t, ents.FindByClass("func_healthcharger"))
@@ -423,6 +426,8 @@ function GM:SetSkillLevel(num)
 		hook.Run("AdjustNPCHealth", skillOld)
 		hook.Run("AdjustWallChargers")
 	end)
+	
+	hook.Run("OnSkillLevelChange", num, skillOld)
 end
 
 cvars.AddChangeCallback("hl1_coop_sv_skill", function(name, value_old, value_new)

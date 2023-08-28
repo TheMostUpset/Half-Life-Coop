@@ -68,8 +68,10 @@ function ENT:AddPlayer(ply)
 			end
 			ply:AddFlags(FL_GODMODE)
 			ply:AddFlags(FL_NOTARGET)
-			ply:SetColor(Color(150, 150, 150, 150))
-			ply:SetRenderMode(RENDERMODE_TRANSALPHA)
+			if cvar_transparentplayers:GetBool() then
+				ply:SetColor(Color(150, 150, 150, 150))
+				ply:SetRenderMode(RENDERMODE_TRANSALPHA)
+			end
 			if self.NoCollide then
 				ply:SetNoCollideWithTeammates(true)
 				ply:SetAvoidPlayers(true)

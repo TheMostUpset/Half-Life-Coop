@@ -275,8 +275,10 @@ function ENT:Touch(ent)
 				ent:Freeze(true)
 				ent:AddFlags(FL_GODMODE)
 				ent:AddFlags(FL_NOTARGET)
-				ent:SetColor(Color(150, 150, 150, 150))
-				ent:SetRenderMode(RENDERMODE_TRANSALPHA)
+				if cvar_transparentplayers:GetBool() then
+					ent:SetColor(Color(150, 150, 150, 150))
+					ent:SetRenderMode(RENDERMODE_TRANSALPHA)
+				end
 				ent:SetWaitBool(true)
 			end
 			if !self.ChangeTimer then

@@ -1,5 +1,10 @@
 net.Receive("HL1DeathMenu", function()
-	GAMEMODE:OpenDeathMenu()
+	GAMEMODE:OpenDeathMenu(net.ReadBool())
+end)
+net.Receive("HL1DeathMenuRemove", function()
+	if IsValid(GAMEMODE.DeathMenu) and GAMEMODE.DeathMenu:IsVisible() then
+		GAMEMODE.DeathMenu:Remove()
+	end
 end)
 
 net.Receive("HL1StartMenu", function()
@@ -49,7 +54,7 @@ surface.CreateFont("MenuFontSmall", {
 surface.CreateFont("HintPanel", {
 	font	= "Trebuchet MS",
 	extended = true,
-	size	= 18,
+	size	= ScrW() / 80,
 	weight	= 800,
 })
 
@@ -67,39 +72,45 @@ surface.CreateFont("HL1Coop_PlayerFrame", {
 	shadow	= true
 })
 
+surface.CreateFont("ChangelogFont", {
+	font	= "Arial",
+	size	= 21
+})
+
 function GM:MainMenuOptions()
 	local menu = {
-		{lang.menu_resumegame, function() self.Menu.MainMenuFrame:DoEndAnim() end},
-		{lang.menu_callvote, function() self:VoteMenu() end},
-		{lang.menu_configuration, function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenPlayerSettings() end},
-		{lang.menu_playermodel, function() self.Menu.MainMenuFrame:DoEndAnim() self:ModelSelectionMenu() end, function() if !GetGlobalBool("hl1_coop_sv_custommodels", false) then return false end end},
-		{lang.menu_langselect, function() self.Menu.MainMenuFrame:DoEndAnim() self:OpenLanguageMenu(true) end},
-		{lang.menu_steamgroup, function() gui.OpenURL("https://steamcommunity.com/groups/hl1coop") end},
-		--{lang.menu_workshoppage, function() gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=1590755372") end},
-		{lang.menu_spectate, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_spectate") end, function() if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then return false end if LocalPlayer():Team() == TEAM_SPECTATOR then return lang.menu_joingame end end},
-		{lang.menu_disconnect, function() RunConsoleCommand("disconnect") end},
-		{lang.menu_quit, function() self.Menu.MainMenuFrame:DoHideAnim() self:QuitDialog() end},
+		{"menu_resumegame", function() self.Menu.MainMenuFrame:DoEndAnim() end},
+		{"menu_callvote", function() self:VoteMenu() end},
+		{"menu_configuration", function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenPlayerSettings() end},
+		{"menu_playermodel", function() self.Menu.MainMenuFrame:DoEndAnim() self:ModelSelectionMenu() end, function() if !GetGlobalBool("hl1_coop_sv_custommodels", false) then return false end end},
+		{"menu_langselect", function() self.Menu.MainMenuFrame:DoEndAnim() self:OpenLanguageMenu(true) end},
+		{"menu_steamgroup", function() gui.OpenURL("https://steamcommunity.com/groups/hl1coop") end},
+		--{"menu_workshoppage", function() gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=1590755372") end},
+		{"menu_spectate", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_spectate") end, function() if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then return false end if LocalPlayer():Team() == TEAM_SPECTATOR then return "menu_joingame" end end},
+		{"menu_disconnect", function() RunConsoleCommand("disconnect") end},
+		{"menu_quit", function() self.Menu.MainMenuFrame:DoHideAnim() self:QuitDialog() end},
 		
-		{lang.menu_adminsettings, function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenServerSettings() end, adminonly = true},
+		{"menu_adminsettings", function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenServerSettings() end, adminonly = true},
 		
-		{lang.menu_legacymenu, function() self:CloseMenus() gui.ActivateGameUI() end}
+		{"menu_legacymenu", function() self:CloseMenus() gui.ActivateGameUI() end}
 	}
 	return menu
 end
 
 function GM:VoteMenuOptions()
 	local votes = {
-		{lang.votemenu_mapvote, function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenMapVote() end},
-		{lang.votemenu_kick, function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenKickVote() end},
-		{lang.votemenu_ban, function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenBanVote() end},
-		{lang.votemenu_restart, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "restart") end},
-		{lang.votemenu_friendlyfire, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "friendlyfire") end},
-		{lang.votemenu_speedrun, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "speedrunmode") end, "Speedrun mode which features:\n- Bunnyhop script\n- Speed indicator\n- No wait triggers\n- Allowed shortcuts\n- Players can't pickup other's weaponbox\n- Unlimited func_pushable velocity\n- Map records\n\nCauses map restart after activation"},
-		{lang.votemenu_survival, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "survivalmode") end, "Survival mode:\n- No respawns until someone reaches checkpoint\n- Map restarts if no alive players left\n- Medkit weapon available"},
-		{"Crack mode", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "crackmode") end, "Crack mode:\nEverything is fucked up"},
-		{lang.votemenu_skill1, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 1) end},
-		{lang.votemenu_skill2, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 2) end},
-		{lang.votemenu_skill3, function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 3) end},
+		{"votemenu_mapvote", function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenMapVote() end},
+		{"votemenu_kick", function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenKickVote() end},
+		{"votemenu_ban", function() self.Menu.MainMenuFrame:DoHideAnim() self:OpenBanVote() end},
+		{"votemenu_restart", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "restart") end},
+		{"votemenu_friendlyfire", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "friendlyfire") end},
+		{"votemenu_speedrun", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "speedrunmode") end, "Speedrun mode which features:\n- Bunnyhop script\n- Speed indicator\n- No wait triggers\n- Allowed shortcuts\n- Players can't pickup other's weaponbox\n- Unlimited func_pushable velocity\n- Map records\n\nCauses map restart after activation"},
+		{"votemenu_survival", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "survivalmode") end, "Survival mode:\n- No respawns until someone reaches checkpoint\n- Map restarts if no alive players left\n- Medkit weapon available"},
+		{"1 HP mode", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "1hpmode") end, "1 HP mode:\nTrue hardcore\n- No medkits\n- No armor\n- Drop from crates replaced for random weapons\n\nCauses map restart after deactivation"},
+		{"Crack mode", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "crackmode") end, "Crack mode:\nEverything is fucked up\n\nCauses map restart"},
+		{"votemenu_skill1", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 1) end},
+		{"votemenu_skill2", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 2) end},
+		{"votemenu_skill3", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 3) end},
 		{"Skip tripmine room", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skiptripmines") end, available = function() return game.GetMap() == "hls11cmrl" end},
 	}
 	return votes
@@ -109,17 +120,17 @@ function GM:QuickMenuOptions()
 	local ply = LocalPlayer()
 	local options = {
 		--{"Call medic", function() RunConsoleCommand("callmedic") end, function() return ply:Team() == TEAM_COOP and ply:GetNWFloat("CallMedicTime") <= CurTime() end},
-		{lang.quickmenu_dropweapon, function() RunConsoleCommand("dropweapon") end, function() return IsValid(ply:GetActiveWeapon()) end},
-		{lang.quickmenu_dropammo, function() RunConsoleCommand("dropammo") end, function() local wep = ply:GetActiveWeapon() return IsValid(wep) and wep:IsScripted() and wep.AmmoEnt and wep:Ammo1() > 0 end},
-		{lang.quickmenu_unload, function() RunConsoleCommand("unload") end, function() local wep = ply:GetActiveWeapon() return IsValid(wep) and wep.Unload and wep.UnloadTime and wep:Clip1() > 0 end},
-		{lang.quickmenu_tocheckpoint, function() RunConsoleCommand("lastcheckpoint") end, function() return ply:Alive() and ply:GetScore() >= PRICE_LAST_CHECKPOINT and ply.CanTeleportTime and ply.CanTeleportTime > CurTime() and LAST_CHECKPOINT and LAST_CHECKPOINT:Distance(ply:GetPos()) > LAST_CHECKPOINT_MINDISTANCE and CanReachNearestTeleport() end},
-		{lang.quickmenu_unstuck, function() RunConsoleCommand("unstuck") end, function() return ply:IsStuck() end},
+		{"quickmenu_dropweapon", function() RunConsoleCommand("dropweapon") end, function() return IsValid(ply:GetActiveWeapon()) end},
+		{"quickmenu_dropammo", function() RunConsoleCommand("dropammo") end, function() local wep = ply:GetActiveWeapon() return IsValid(wep) and wep:IsScripted() and wep.AmmoEnt and wep:Ammo1() > 0 end},
+		{"quickmenu_unload", function() RunConsoleCommand("unload") end, function() local wep = ply:GetActiveWeapon() return IsValid(wep) and wep.Unload and wep.UnloadTime and wep:Clip1() > 0 end},
+		{"quickmenu_tocheckpoint", function() RunConsoleCommand("lastcheckpoint") end, function() return ply:Alive() and ply:GetScore() >= cvar_price_movetocheckpoint:GetInt() and ply.CanTeleportTime and ply.CanTeleportTime > CurTime() and LAST_CHECKPOINT and LAST_CHECKPOINT:Distance(ply:GetPos()) > LAST_CHECKPOINT_MINDISTANCE and CanReachNearestTeleport() end},
+		{"quickmenu_unstuck", function() RunConsoleCommand("unstuck") end, function() return ply:IsStuck() end},
 	}
 	return options
 end
 
 function GM:GetLanguageTable()
-	-- first string in the table is a lang file suffix,
+	-- first string in the table is a lang file postfix,
 	-- e.g. lang_en.lua is just "en" here, same for others.
 	-- second string is language name that appears in menu.
 	-- third one is path to language icon
@@ -128,6 +139,7 @@ function GM:GetLanguageTable()
 		{"ru", "Русский", "flags16/ru.png"},
 		{"ua", "Українська", "flags16/ua.png"},
 		{"br", "Português", "flags16/br.png"},
+		{"de", "Deutsch", "flags16/de.png"},
 		{"tr", "Türkçe", "flags16/tr.png"},
 	}
 	return t
@@ -135,42 +147,44 @@ end
 
 function GM:HintTable()
 	local t = {
-		lang.menuhint_showdist,
-		lang.menuhint_thirdperson,
-		lang.menuhint_dropweapon,
-		lang.menuhint_callmedic,
-		lang.menuhint_callvote,
-		lang.menuhint_chase,
-		lang.menuhint_scorereq,
-		lang.menuhint_npchealth,
-		lang.menuhint_medkitcharge,
+		"menuhint_showdist",
+		"menuhint_thirdperson",
+		"menuhint_dropweapon",
+		"menuhint_callmedic",
+		"menuhint_callvote",
+		"menuhint_chase",
+		"menuhint_scorereq",
+		"menuhint_npchealth",
+		"menuhint_medkitcharge",
 	}
 	return t
 end
 
 function GM:AdminSettingsTable()
 	local adminsettingscvars = {
-		{"DLabel", lang.adminmenu_hevvoice, "hl1_coop_sv_hevvoice", 1},
-		{"DLabel", lang.adminmenu_custommodels, "hl1_coop_sv_custommodels", 0, func = function() timer.Simple(.1, function() if IsValid(self.Menu.MainMenuFrame) then self.Menu.MainMenuFrame:Refresh() end end) end},
-		{"DLabel", lang.adminmenu_friendlyfire, "hl1_coop_sv_friendlyfire", 0},
-		{"DLabel", lang.adminmenu_givemedkit, "hl1_coop_sv_medkit", 0},
-		{"DLabel", lang.adminmenu_wboxstay, "hl1_coop_sv_wboxstay", 0},
-		{"DLabel", lang.adminmenu_playergib, "hl1_coop_sv_playergib", 1},
-		{"DLabel", lang.adminmenu_voteenable, "hl1_coop_sv_vote_enable", 1},
-		{"DLabel", lang.adminmenu_allowvotingspec, "hl1_coop_sv_vote_allowspectators", 0},
-		{"DLabel", lang.adminmenu_chatsounds, "hl1_coop_sv_chatsounds", 1},
-		{"DLabel", lang.adminmenu_speedrunmode, "hl1_coop_speedrunmode", 0},
-		{"DLabel", lang.adminmenu_survivalmode, "hl1_coop_sv_survival", 0},
-		{"DLabel", lang.adminmenu_crackmode, "hl1_coop_crackmode", 0},
-		{"DLabel", lang.adminmenu_gainnpchealth, "hl1_coop_sv_gainnpchealth", 1},
-		{"DNumSlider", lang.adminmenu_skilllevel, "hl1_coop_sv_skill", 2, 0, 1, 4},
-		{"DLabel", lang.adminmenu_wepmprules, "hl1_sv_mprules", 0},
-		{"DLabel", lang.adminmenu_wepunlimitedammo, "hl1_sv_unlimitedammo", 0},
-		{"DButton", lang.adminmenu_cancelvote, "vote_cancel"},
-		{"DButton", lang.adminmenu_restartmap, "game_restart"},
-		{"DButton", lang.adminmenu_tolobby, "game_lobby"},
+		{"DLabel", "adminmenu_hevvoice", "hl1_coop_sv_hevvoice", 1},
+		{"DLabel", "adminmenu_custommodels", "hl1_coop_sv_custommodels", 0, func = function() timer.Simple(.1, function() if IsValid(self.Menu.MainMenuFrame) then self.Menu.MainMenuFrame:Refresh() end end) end},
+		{"DLabel", "adminmenu_friendlyfire", "hl1_coop_sv_friendlyfire", 0},
+		{"DLabel", "adminmenu_givemedkit", "hl1_coop_sv_medkit", 0},
+		{"DLabel", "adminmenu_wboxstay", "hl1_coop_sv_wboxstay", 0},
+		{"DLabel", "adminmenu_playergib", "hl1_coop_sv_playergib", 1},
+		{"DLabel", "adminmenu_voteenable", "hl1_coop_sv_vote_enable", 1},
+		{"DLabel", "adminmenu_allowvotingspec", "hl1_coop_sv_vote_allowspectators", 0},
+		{"DLabel", "adminmenu_chatsounds", "hl1_coop_sv_chatsounds", 1},
+		{"DLabel", "adminmenu_speedrunmode", "hl1_coop_mode_speedrun", 0},
+		{"DLabel", "adminmenu_survivalmode", "hl1_coop_mode_survival", 0},
+		{"DLabel", "adminmenu_1hpmode", "hl1_coop_mode_1hp", 0},
+		{"DLabel", "adminmenu_crackmode", "hl1_coop_mode_crack", 0},
+		{"DLabel", "adminmenu_gainnpchealth", "hl1_coop_sv_gainnpchealth", 1},
+		{"DNumSlider", "adminmenu_skilllevel", "hl1_coop_sv_skill", 2, 0, 1, 4},
+		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wepscreenshake"), "hl1_sv_explosionshake", 0},
+		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wepmprules"), "hl1_sv_mprules", 0},
+		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wepunlimitedammo"), "hl1_sv_unlimitedammo", 0},
+		{"DButton", "adminmenu_cancelvote", "vote_cancel"},
+		{"DButton", "adminmenu_restartmap", "game_restart"},
+		{"DButton", "adminmenu_tolobby", "game_lobby"},
 		{"DButton", "Impulse 101", "hl1_coop_impulse101"},
-		{"DButton", lang.adminmenu_openswepmenu, "swepmenu"},
+		{"DButton", "adminmenu_openswepmenu", "swepmenu"},
 	}
 	return adminsettingscvars
 end
@@ -181,6 +195,7 @@ local sndMenu3 = Sound("common/launch_select2.wav")
 local sndMenu4 = Sound("common/launch_dnmenu1.wav")
 
 local menuframeColor = Color(20, 20, 20, 200)
+local menuBackgroundColor = Color(100, 100, 100, 180)
 local menuTextCol = Color(255, 200, 0, 180)
 local menuTextSelected = Color(255, 255, 0, 255)
 local buttoncolorDisabled = Color(50, 50, 50, 160)
@@ -223,7 +238,7 @@ function GM:OpenMountMenu(delay)
 	
 	local btn_y = textPosY + textLabel:GetTall() + 20
 	
-	local link = "https://mega.nz/file/hgMinbga#dmBdnyJXY8iWp5lGXbKuS3zonUMpaNO9TqqXJHTdK68"
+	local link = "https://mega.nz/file/t0VUQAiQ#8fWbmp3XGxQJUKho34tCwqxouwteiEEN6mJQ_sZFQQY"
 	
 	local textEntry = vgui.Create("DTextEntry", menu)
 	textEntry:SetText(link)
@@ -341,70 +356,197 @@ function GM:IsStartMenuOpen()
 	return IsValid(self.StartMenu) and self.StartMenu:IsVisible()
 end
 
-function GM:OpenStartMenu()
-	if self:IsStartMenuOpen() then
+function GM:StartMenuReload()
+	if IsValid(self.StartMenu) then
+		self.StartMenu:Remove()
+		-- TODO:Stop music
+	end
+	hook.Run("OpenStartMenu", 3)
+end
+
+function GM:IsLobbyChatValid()
+	return IsValid(self.LobbyChat) and self.LobbyChat.richText and IsValid(self.LobbyChat.richText)
+end
+
+function GM:IsLobbyChatVisible()
+	return IsValid(self.LobbyChat) and self.LobbyChat:IsVisible() and self.LobbyChat.richText and IsValid(self.LobbyChat.richText) and self.LobbyChat.richText:IsVisible()
+end
+
+function GM:OpenStartMenu(firstHintTime)
+	if IsValid(self.StartMenu) then
+		if !self.StartMenu:IsVisible() then
+			self.StartMenu:Show()
+		end
 		return
 	end
 	
 	hook.Run("PlayMusic", "HL1_Music.track_21", .5)
-
+	
+	local width, height = math.Clamp(ScrW() / 1.75, 600, 900), math.Clamp(ScrH() / 6 + (32 + 1) * game.MaxPlayers(), ScrH() / 2, ScrH() / 1.65)
+	local lobbyChatH = height / 3
 	self.StartMenu = vgui.Create("DPanel")
 	local menu = self.StartMenu
-	menu:SetSize(600, 64 + math.min((32 + 1) * game.MaxPlayers(), 512))
-	menu:SetPos(ScrW() / 2 - menu:GetWide() / 2, ScrH() / 2 - menu:GetTall() / 2)
-	menu:SetBackgroundColor(Color(120, 60, 0, 180))
+	-- menu:SetSize(width, 64 + math.min((32 + 1) * game.MaxPlayers(), 512))
+	menu:SetSize(width, height)
+	menu:SetPos((ScrW() - width) / 2, (ScrH() - height - lobbyChatH) / 2)
+	menu:SetBackgroundColor(menuframeColor) -- old color: Color(120, 60, 0, 180)
 	menu:MakePopup()
 	menu:SetMouseInputEnabled(true)
 	menu:SetKeyboardInputEnabled(false)
 	
-	local margin = 25
+	local menuTitle = vgui.Create("DLabel", menu)
+	menuTitle:SetFont("MenuFont")
+	menuTitle:SetText(LangString("menu_lobby"))
+	menuTitle:SizeToContents()
+	menuTitle:SetPos(menuTitleX, menuTitleY)
+	menuTitle:SetColor(menuTextCol)
 	
-	function menu:PaintOver(w, h)
-		surface.SetDrawColor(20, 20, 20, 180)
-		surface.DrawRect(0, 0, w, margin)
-		draw.SimpleText("Welcome to the "..GAMEMODE.Name.."!", "Trebuchet24", w / 2, 0, Color(255,200,50,255), TEXT_ALIGN_CENTER) 
+	local margin = menuContentGap
+	
+	local maxPlayers = vgui.Create("DLabel", menu)
+	maxPlayers:SetFont("MenuFontSmall")
+	maxPlayers:SetText("0/"..game.MaxPlayers())
+	maxPlayers:SizeToContents()
+	maxPlayers:SetPos((width - maxPlayers:GetWide()) / 2, margin)
+	maxPlayers:SetColor(menuTextCol)
+	function maxPlayers:Think()
+		local text = player.GetCount().."/"..game.MaxPlayers()
+		if self:GetText() != text then
+			self:SetText(text)
+			self:SizeToContents()
+			self:SetX((width - self:GetWide()) / 2)
+		end
+	end
+	
+	if self.Version then
+		local version = vgui.Create("DLabel", menu)
+		version:SetFont("Trebuchet18")
+		version:SetText(self.Version)
+		version:SizeToContents()
+		version:SetPos(width - version:GetWide() - margin / 2, height - version:GetTall() - margin / 3)
+		version:SetColor(menuTextCol)
+	end
+	
+	-- function menu:PaintOver(w, h)
+		-- surface.SetDrawColor(20, 20, 20, 180)
+		-- surface.DrawRect(0, 0, w, margin)
+		-- draw.SimpleText("Welcome to the "..GAMEMODE.Name.."!", "Trebuchet24", w / 2, 0, Color(255,200,50,255), TEXT_ALIGN_CENTER) 
 		--if !ply:IsAdmin() and !ply:GetNWBool("Ready") and ply.afkTime and (RealTime() - ply.afkTime) >= GAMEMODE.KickUnreadyPlayerTime - 10 then
 			--draw.DrawText("You were marked as AFK\nand will be kicked soon", "Trebuchet18", w - 95, 80, Color(255,200,50,255), TEXT_ALIGN_CENTER)
 		--end
-	end
+	-- end
 	
 	function menu:Think()
 		if IsValid(self) and GAMEMODE:GetCoopState() != COOP_STATE_FIRSTLOAD then
 			hook.Run("StopMusic", 1.5)
 			self:Remove()
 		end
+		if gui.IsGameUIVisible() and self:IsVisible() then
+			self:Hide()
+		end
 	end
 	
-	local menuX, menuY = menu:GetPos()
-	local button = vgui.Create("DButton", menu)
-	button:SetText(">>")
-	button:SetSize(30, 21)
-	button:SetPos(menu:GetWide() - button:GetWide() - 2, 2)
-	function button:MenuToCenter()
-		menu:MoveTo(menuX, menuY, .5, 0, -1, function()
-			button:SetText(">>")
-			button.Func = button.MenuToRight
-		end)
+	local menuX, menuY = menu:GetPos()	
+	local PlayerPanelW, PlayerPanelH = (menu:GetWide() - margin*2.5) / 2, menu:GetTall() - menuTitle:GetTall() - margin * 2
+	local PlayerPanelX, PlayerPanelY = margin, menuTitle:GetTall() + margin
+	local newsPanelW = (menu:GetWide() - margin*2.5) / 2
+	local lobbyChatY = menuY + height + 4
+	
+	local button_disconnect = vgui.Create("DLabel", menu)
+	button_disconnect:SetFont("MenuFont")
+	button_disconnect:SetText(LangString("menu_disconnect"))
+	button_disconnect:SetTextColor(menuTextCol)
+	button_disconnect:SizeToContents()
+	button_disconnect:SetPos(width / 2 + margin*2, height - button_disconnect:GetTall() - margin / 2)
+	button_disconnect:SetMouseInputEnabled(true)
+	function button_disconnect:DoClick()
+		RunConsoleCommand("disconnect")
 	end
-	function button:MenuToRight()
-		menu:MoveTo(ScrW() - menu:GetWide() - 3, menuY, .5, 0, -1, function()
-			button:SetText("<<")
-			button.Func = button.MenuToCenter
-		end)
+	function button_disconnect:OnCursorEntered()
+		surface.PlaySound(sndMenu2)
+		self:SetTextColor(menuTextSelected)
 	end
-	button.Func = button.MenuToRight
-	function button:DoClick()
-		self.Func()
+	function button_disconnect:OnCursorExited()
+		self:SetTextColor(menuTextCol)
 	end
 	
-	local DScrollPanel = vgui.Create("DScrollPanel", menu)
-	DScrollPanel:SetSize(menu:GetWide() - margin * 2 - 125, menu:GetTall() - 64)
-	DScrollPanel:SetPos(margin, menu:GetTall() / 2 - DScrollPanel:GetTall() / 2 + margin / 2)
+	local button_rdy = vgui.Create("DLabel", menu)
+	button_rdy:SetFont("MenuFont")
+	button_rdy:SetText(LangString("menu_imready"))
+	button_rdy:SetTextColor(menuTextCol)
+	button_rdy:SizeToContents()
+	button_rdy:SetPos((width / 2 - button_rdy:GetWide()) - margin*2, height - button_rdy:GetTall() - margin / 2)
+	button_rdy:SetMouseInputEnabled(true)
+	function button_rdy:DoClick()
+		RunConsoleCommand("_hl1_coop_ready")
+		if player.GetCount() > 1 or (CONNECTING_PLAYERS_TABLE and #CONNECTING_PLAYERS_TABLE > 0) then
+			surface.PlaySound(sndMenu3)
+			self:SetMouseInputEnabled(false)
+			self:SetFont("MenuFontSmall")
+			self:SetText(LangString("menu_waitingpl"))
+			self:SizeToContents()
+			self:SetX((width - self:GetWide()) / 2)
+			button_disconnect:Hide()
+		end
+	end
+	function button_rdy:OnCursorEntered()
+		surface.PlaySound(sndMenu2)
+		self:SetTextColor(menuTextSelected)
+	end
+	function button_rdy:OnCursorExited()
+		self:SetTextColor(menuTextCol)
+	end
+	function button_rdy:AnimationThink()
+		if !self:IsMouseInputEnabled() then
+			local highlight = math.sin(RealTime() * 4) * 40
+			self:SetTextColor(Color(210 + highlight, 200 + highlight, 20, 180))
+		end
+	end
+	
+	-- local waiting_text = vgui.Create("DLabel", menu)
+	-- waiting_text:SetText("")
+	-- waiting_text:SetTextColor(menuTextCol)
+	-- waiting_text:SetSize(PlayerPanelW, PlayerPanelH / 3.3)
+	-- waiting_text:SetPos((PlayerPanelW - waiting_text:GetWide()) / 2 + PlayerPanelX, height - waiting_text:GetTall())
+	-- waiting_text:SetMouseInputEnabled(false)
+	-- function waiting_text:Paint(w,h)
+		-- if !button_rdy:IsVisible() and player.GetCount() > 1 or (CONNECTING_PLAYERS_TABLE and #CONNECTING_PLAYERS_TABLE > 0) then
+			-- draw.DrawText(lang.menu_waitingpl, "ChangelogFont", w / 2, h / 2, Color(255,255,255,255), TEXT_ALIGN_CENTER) 
+		-- end
+	-- end
+	
+	PlayerPanelH = PlayerPanelH - button_rdy:GetTall()
+	
+	local newsPanel
+	if self.Changelog then
+		newsPanel = vgui.Create("DScrollPanel", menu)
+		newsPanel:SetSize(newsPanelW, PlayerPanelH)
+		newsPanel:SetPos((menu:GetWide() - newsPanelW - margin), PlayerPanelY)
+		function newsPanel:Paint(w, h)
+			surface.SetDrawColor(menuBackgroundColor)
+			surface.DrawRect(0, 0, w, h)
+		end
+		local verText = newsPanel:Add("DLabel")
+		verText:SetFont("ChangelogFont")
+		verText:SetText("What's new:\n"..self.Changelog)
+		verText:SetTextColor(menuTextCol)
+		verText:Dock(FILL)
+		-- verText:DockMargin(5, 5, 5, 5)
+		verText:SetWrap(true)
+		verText:SetAutoStretchVertical(true)
+	end
+	if !newsPanel then
+		PlayerPanelW = menu:GetWide() - margin * 2
+	end
+	
+	local PlayerPanel = vgui.Create("DScrollPanel", menu)
+	PlayerPanel:SetSize(PlayerPanelW, PlayerPanelH)
+	PlayerPanel:SetPos(PlayerPanelX, PlayerPanelY)
 	local plyTable = {}
 	--local ConnectingTimeout = CurTime() + 30
 
-	function DScrollPanel:Think()
-		for k, pl in pairs(player.GetAll()) do
+	function PlayerPanel:Think()
+		for k, pl in ipairs(player.GetAll()) do
 			if CONNECTING_PLAYERS_TABLE then
 				if !self.Unconnected then
 					self.Unconnected = {}
@@ -413,15 +555,15 @@ function GM:OpenStartMenu()
 					for k, v in pairs(CONNECTING_PLAYERS_TABLE) do
 						if LocalPlayer():UserID() != v then
 							if !IsValid(self.Unconnected[v]) then
-								self.Unconnected[v] = DScrollPanel:Add("DPanel")
+								self.Unconnected[v] = PlayerPanel:Add("DPanel")
 								self.Unconnected[v]:Dock(TOP)
 								self.Unconnected[v]:DockMargin(0, 0, 0, 1)
-								self.Unconnected[v]:SetSize(DScrollPanel:GetWide(), 32)
+								self.Unconnected[v]:SetSize(PlayerPanel:GetWide(), 32)
 								self.Unconnected[v]:SetBackgroundColor(Color(40, 40, 40, 180))
 								
 								self.Unconnected[v].Nick = vgui.Create("DLabel", self.Unconnected[v])
 								self.Unconnected[v].Nick:SetFont("HL1Coop_PlayerFrame")
-								self.Unconnected[v].Nick:SetText(lang.menu_connectingpl.." ("..v..")")
+								self.Unconnected[v].Nick:SetText(LangString("menu_connectingpl").." ("..v..")")
 								self.Unconnected[v].Nick:SizeToContents()
 								self.Unconnected[v].Nick:SetPos(8, self.Unconnected[v]:GetTall() / 2 - self.Unconnected[v].Nick:GetTall() / 2 + 1)
 							elseif pl:UserID() == v then
@@ -432,10 +574,10 @@ function GM:OpenStartMenu()
 				end
 			end
 			if !IsValid(pl.PlyReady) then
-				pl.PlyReady = DScrollPanel:Add("DPanel")
+				pl.PlyReady = PlayerPanel:Add("DPanel")
 				pl.PlyReady:Dock(TOP)
 				pl.PlyReady:DockMargin(0, 0, 0, 1)
-				pl.PlyReady:SetSize(DScrollPanel:GetWide(), 32)
+				pl.PlyReady:SetSize(PlayerPanel:GetWide(), 32)
 				pl.PlyReady:SetBackgroundColor(Color(40, 40, 40, 180))
 				
 				pl.PlyReady.Avatar = vgui.Create("AvatarImage", pl.PlyReady)
@@ -452,7 +594,7 @@ function GM:OpenStartMenu()
 				pl.PlyReady.Status:SetFont("HL1Coop_PlayerFrame")
 				pl.PlyReady.Status:SetSize(pl.PlyReady:GetSize())
 				
-				function pl.PlyReady:AnimationThink(w, h)
+				function pl.PlyReady:AnimationThink()
 					if pl == LocalPlayer() then
 						local highlight = math.sin(RealTime()) * 30 + 30
 						self:SetBackgroundColor(Color(40 + highlight * 1.25, 40 + highlight * 1.5, 40 + highlight / 2, 180))
@@ -463,18 +605,21 @@ function GM:OpenStartMenu()
 				if !table.HasValue(plyTable, toTable) then
 					table.insert(plyTable, toTable)
 				end
+				
+				-- PlayerPanel:OnPlayerAdded(pl.PlyReady, pl)
 			else
-				local text, col = lang.menu_connecting, Color(255, 200, 40, 255)
+				local text, col = "menu_connecting", Color(255, 200, 40, 255)
 				if pl:GetNWInt("Status") == PLAYER_READY then
-					text, col = lang.menu_ready, Color(40, 255, 40, 255)
+					text, col = "menu_ready", Color(40, 255, 40, 255)
 				elseif pl:GetNWInt("Status") == PLAYER_NOTREADY then
-					text, col = lang.menu_notready, Color(255, 40, 40, 255)
+					text, col = "menu_notready", Color(255, 40, 40, 255)
 				end
 				if pl:IsBot() then
-					text = lang.menu_bot
+					text = "menu_bot"
 				end
-				if pl.PlyReady.Status:GetText() != text then
-					pl.PlyReady.Status:SetText(text)
+				local langString = LangString(text)
+				if pl.PlyReady.Status:GetText() != langString then
+					pl.PlyReady.Status:SetText(langString)
 					pl.PlyReady.Status:SetTextColor(col)
 					pl.PlyReady.Status:SizeToContents()
 					pl.PlyReady.Status:SetPos(pl.PlyReady:GetWide() - pl.PlyReady.Status:GetWide() - 8, pl.PlyReady:GetTall() / 2 - pl.PlyReady.Status:GetTall() / 2 + 1)
@@ -491,36 +636,78 @@ function GM:OpenStartMenu()
 				end
 			end
 		end
-		for k, v in pairs(plyTable) do
-			if !IsValid(v[1]) then v[2]:Remove() end
+		for k, v in ipairs(plyTable) do
+			if !IsValid(v[1]) then
+				-- PlayerPanel:OnPlayerRemoved(v[2], v[1])
+				v[2]:Remove()
+			end
 		end
 	end
-	function DScrollPanel:Paint(w, h)
-		surface.SetDrawColor(20, 20, 20, 100)
+	function PlayerPanel:Paint(w, h)
+		surface.SetDrawColor(menuBackgroundColor)
 		surface.DrawRect(0, 0, w, h)
 	end
 	
-	local button_rdy = vgui.Create("DButton", menu)
-	button_rdy:SetText(lang.menu_imready)
-	button_rdy:SetSize(100, 40)
-	button_rdy:SetPos(menu:GetWide() - margin - button_rdy:GetWide(), menu:GetTall() / 2 - button_rdy:GetTall() / 2 + margin / 2)
-	button_rdy.DoClick = function()
-		button_rdy:SetDisabled(true)
-		button_rdy:SetText("")
-		RunConsoleCommand("_hl1_coop_ready")
+	local function chatSendMessage(textpnl)
+		RunConsoleCommand("say", textpnl:GetValue())
+		textpnl:SetText("")
 	end
-	function button_rdy:Paint(w,h)
-		if !self:GetDisabled() then
-			surface.SetDrawColor(255, 255, 200, 255)
-			surface.DrawRect(0, 0, w, h)
-		elseif player.GetCount() > 1 or (CONNECTING_PLAYERS_TABLE and #CONNECTING_PLAYERS_TABLE > 0) then
-			draw.DrawText(lang.menu_waitingpl, "HudHintTextLarge", w / 2, 0, Color(255,255,255,255), TEXT_ALIGN_CENTER) 
+	
+	local chatMargin = 6
+	self.LobbyChat = vgui.Create("EditablePanel", menu)
+	local lobbyChat = self.LobbyChat
+	lobbyChat:SetSize(width, lobbyChatH)
+	lobbyChat:SetPos(menuX, lobbyChatY)
+	lobbyChat:MakePopup()
+	-- lobbyChat:SetMouseInputEnabled(false)
+	lobbyChat:SetKeyboardInputEnabled(false)
+	function lobbyChat:Paint(w, h)
+		surface.SetDrawColor(menuframeColor)
+		surface.DrawRect(0, 0, w, h)
+	end
+	local textEntryH = 24
+	local textEntry = vgui.Create("DTextEntry", lobbyChat)
+	textEntry:SetSize(width - 64, textEntryH)
+	textEntry:SetPos(0, lobbyChatH - textEntryH)
+	textEntry:SetPlaceholderText(LangString("chat_yourmessage"))
+	function textEntry:OnGetFocus()
+		lobbyChat:SetKeyboardInputEnabled(true)
+	end
+	function textEntry:OnLoseFocus()
+		lobbyChat:SetKeyboardInputEnabled(false)
+	end
+	function textEntry:OnKeyCodeTyped(code)
+		if code == KEY_TAB then
+			self:SetText(hook.Run("OnChatTab", self:GetValue()))
+			return true
+		elseif code == KEY_ENTER then
+			chatSendMessage(self)
+			-- return true
 		end
+	end
+	function textEntry:OnChange()
+		hook.Run("ChatTextChanged", self:GetValue())
+	end
+
+	local chatSendW = 64
+	local chatSend = vgui.Create("DButton", lobbyChat)
+	chatSend:SetSize(chatSendW, textEntryH)
+	chatSend:SetPos(width - chatSendW, lobbyChatH - textEntryH)
+	chatSend:SetText(LangString("chat_send"))
+	chatSend.DoClick = function()
+		chatSendMessage(textEntry)
+	end
+	
+	lobbyChat.richText = vgui.Create("RichText", lobbyChat)
+	lobbyChat.richText:Dock(FILL)
+	lobbyChat.richText:DockMargin(chatMargin, chatMargin, chatMargin, textEntryH + chatMargin)
+	function lobbyChat.richText:PerformLayout()
+		self:SetFontInternal("GModNotify")
+		self:SetBGColor(menuBackgroundColor)
 	end
 	
 	local hint_panel = vgui.Create("DPanel", menu)
-	hint_panel:SetSize(menu:GetWide(), 32)
-	hint_panel:SetBackgroundColor(Color(40, 20, 0, 180))
+	hint_panel:SetBackgroundColor(Color(110, 70, 0, 180))
 	hint_panel:SetAlpha(0)
 	hint_panel:MakePopup()
 	hint_panel:SetMouseInputEnabled(false)
@@ -531,36 +718,37 @@ function GM:OpenStartMenu()
 	
 	local hint_text = vgui.Create("DLabel", hint_panel)
 	hint_text:SetFont("HintPanel")
-	hint_text:SetText(lang.menu_hint..": "..hint_table[randomhint])
+	hint_text:SetText(LangString("menu_hint")..": "..LangString(hint_table[randomhint]))
+	hint_text:SetTextColor(Color(255, 255, 80, 255))
 	hint_text:SizeToContents()
+	hint_panel:SetSize(menu:GetWide(), hint_text:GetTall() + 16)
 	hint_text:SetPos(hint_panel:GetWide() / 2 - hint_text:GetWide() / 2, hint_panel:GetTall() / 2 - hint_text:GetTall() / 2)
 	
 	table.remove(hint_table, randomhint)
 	
-	local HINT_FIRST_TIME = 15
+	local HINT_FIRST_TIME = firstHintTime or 15
 	local HINT_LIFE_TIME = 6
 	local HINT_NEXT_TIME = 3.5 -- works a bit incorrectly
 	
 	local hintalpha = 0
 	local hinttime = RealTime() + HINT_FIRST_TIME -- first hint appearing
 	local hintendtime = hinttime + HINT_LIFE_TIME
-	local hintpos = menuY + menu:GetTall() - hint_panel:GetTall()
-	local hintepos = menuY + menu:GetTall() + 4
+	local hintpos = lobbyChatY + lobbyChatH - hint_panel:GetTall()
+	local hintepos = lobbyChatY + lobbyChatH + 4
 	
 	function hint_panel:AnimationThink()
 		local FT = FrameTime()
 		if hinttime <= RealTime() then -- slides down
 			hintalpha = Lerp(FT * 2, hintalpha, 255)
 			hintpos = Lerp(FT * 4, hintpos, hintepos)
-			local menuX, menuY = menu:GetPos()
-			self:SetPos(menuX, hintpos)
+			self:SetPos(menu:GetX(), hintpos)
 		end
 		if hintendtime <= RealTime() then
 			hinttime = RealTime() + HINT_NEXT_TIME
 			hintalpha = Lerp(FT * 2, hintalpha, 0)
 			if hintalpha < .001 then
 				hintendtime = hinttime + HINT_LIFE_TIME
-				hintpos = menuY + menu:GetTall() - hint_panel:GetTall()
+				hintpos = lobbyChatY + lobbyChatH - hint_panel:GetTall()
 				
 				if #hint_table == 0 then
 					hint_table = hook.Run("HintTable")
@@ -568,7 +756,7 @@ function GM:OpenStartMenu()
 
 				randomhint = math.random(1, #hint_table)
 
-				hint_text:SetText(lang.menu_hint..": "..hint_table[randomhint])
+				hint_text:SetText(LangString("menu_hint")..": "..LangString(hint_table[randomhint]))
 				hint_text:SizeToContents()
 				hint_text:SetPos(self:GetWide() / 2 - hint_text:GetWide() / 2, self:GetTall() / 2 - hint_text:GetTall() / 2)
 				
@@ -577,31 +765,78 @@ function GM:OpenStartMenu()
 		end
 		self:SetAlpha(hintalpha)
 	end
+	
+	local button = vgui.Create("DButton", menu)
+	button:SetText(">>")
+	button:SetSize(30, 21)
+	button:SetPos(menu:GetWide() - button:GetWide() - 2, 2)
+	function button:MenuToCenter()
+		menu:MoveTo(menuX, menuY, .5, 0, -1, function()
+			button:SetText(">>")
+			button.Func = button.MenuToRight
+			if newsPanel then newsPanel:SetSize(newsPanelW, PlayerPanelH) end
+			menu:SetWidth(width)
+			hint_panel:SetVisible(true)
+			lobbyChat:SetVisible(true)
+			button:SetX(menu:GetWide() - button:GetWide() - 2)
+			button_rdy:SetX((width / 2 - button_rdy:GetWide()) - margin*2)
+			maxPlayers:SetX((menu:GetWide() - maxPlayers:GetWide()) / 2)
+		end)
+	end
+	function button:MenuToRight()
+		if newsPanel then newsPanel:SetSize(0, 0) end
+		menu:SetWidth(PlayerPanelW + margin * 2)
+		hint_panel:SetVisible(false)
+		lobbyChat:SetVisible(false)
+		button:SetX(menu:GetWide() - button:GetWide() - 2)
+		button_rdy:SetX((menu:GetWide() - button_rdy:GetWide()) / 2)
+		maxPlayers:SetX((menu:GetWide() - maxPlayers:GetWide()) / 2)
+		-- TODO: resize playerpanel if there is no newspanel
+		menu:MoveTo(ScrW() - menu:GetWide() - 3, menuY, .5, 0, -1, function()
+			button:SetText("<<")
+			button.Func = button.MenuToCenter
+		end)
+	end
+	button.Func = button.MenuToRight
+	function button:DoClick()
+		self.Func()
+	end
 end
 
-function GM:OpenDeathMenu()
+function GM:OpenDeathMenu(isSurvival)
 	local plyscore = LocalPlayer():GetScore() or 0
-	local respawncost = PRICE_RESPAWN_HERE
-	local fullrespawncost = PRICE_RESPAWN_FULL
+	local respawncost = cvar_price_respawn_here:GetInt()
+	local fullrespawncost = cvar_price_respawn_full:GetInt()
+	local survrespawncost = cvar_price_respawn_survival:GetInt()
 	
 	if IsValid(self.DeathMenu) and self.DeathMenu:IsVisible() then
 		return
 	end
 	
 	local respawnOptions = {
-		{price = 0, text = lang.deathmenu_option3, cvar = 2, disabled = false},
-		{price = respawncost, text = lang.deathmenu_option2, cvar = 1, disabled = false},
-		{price = fullrespawncost, text = lang.deathmenu_option1, cvar = 3, disabled = MAP.DisableFullRespawn}
+		{price = 0, text = "deathmenu_option3", cvar = 2, disabled = false},
+		{price = respawncost, text = "deathmenu_option2", cvar = 1, disabled = false},
+		{price = fullrespawncost, text = "deathmenu_option1", cvar = 3, disabled = MAP.DisableFullRespawn}
 	}
 	
+	if isSurvival then
+		respawnOptions = {
+			{price = survrespawncost, text = "deathmenu_option_surv1", cvar = 2, disabled = false},
+			{text = "deathmenu_option_surv2", cvar = 1, disabled = false}
+		}
+	end
+	
+	local textwidth, textheight = 0, 0
 	local maxWidth = 0
 	surface.SetFont("MenuFontSmall")
 	for k, v in ipairs(respawnOptions) do
-		local width, height = surface.GetTextSize(v.text)
-		if width > maxWidth then maxWidth = width end
+		textwidth, textheight = surface.GetTextSize(LangString(v.text))
+		if textwidth > maxWidth then maxWidth = textwidth end
 	end
-
-	local w, h = ScrW() / 6 + maxWidth, ScrH() / 4
+	
+	local gap_from_title = textheight * 2.15
+	local gap_from_text = textheight * 1.15
+	local w, h = ScrW() / 6 + maxWidth, gap_from_title * 1.35 + #respawnOptions * gap_from_text
 
 	self.DeathMenu = vgui.Create("DPanel")
 	local menu = self.DeathMenu
@@ -618,34 +853,32 @@ function GM:OpenDeathMenu()
 	
 	local deathText = vgui.Create("DLabel", menu)
 	deathText:SetFont("MenuFont")
-	deathText:SetText(lang.deathmenu_title)
+	deathText:SetText(LangString("deathmenu_title"))
 	deathText:SizeToContents()
 	deathText:SetPos(menuTitleX, menuTitleY)
 	deathText:SetColor(menuTextCol)
 
 	local scoreText = vgui.Create("DLabel", menu)
 	scoreText:SetFont("MenuFontSmall")
-	scoreText:SetText(lang.score..": "..plyscore)
+	scoreText:SetText(LangString("score")..": "..plyscore)
 	scoreText:SetTextColor(Color(255, 250, 100, 255))
 	scoreText:SizeToContents()
 	scoreText:SetPos(w - scoreText:GetWide() - menuTitleX, menuTitleY * 1.5)
 
+	local x, y = ScrW() * 0.024, gap_from_title
 	for k, v in ipairs(respawnOptions) do
 		local option = vgui.Create("DLabel", menu)
 		option:SetFont("MenuFontSmall")
-		option:SetText(v.text)
+		option:SetText(LangString(v.text))
 		option:SizeToContents()
 		option:SetMouseInputEnabled(true)
-		local x, y = ScrW() * 0.024, h / 3
-		if k == 2 then
-			y = h / 2
-		elseif k == 3 then
-			y = h / 1.5
+		if k > 1 then
+			y = y + gap_from_text
 		end
 		option:SetPos(x, y)
-		if plyscore < v.price or v.disabled then
+		if v.price and plyscore < v.price or v.disabled then
 			option:SetTextColor(Color(100,100,100,150))
-		else		
+		else
 			function option:OnCursorEntered()
 				surface.PlaySound(sndMenu2)
 				self:SetTextColor(Color(255,255,255,255))
@@ -655,21 +888,23 @@ function GM:OpenDeathMenu()
 			end
 			function option:DoClick()
 				surface.PlaySound(sndMenu3)
-				RunConsoleCommand("_hl1_coop_respawn", v.cvar)
+				if v.cvar then RunConsoleCommand("_hl1_coop_respawn", v.cvar) end
 				menu:Remove()
 			end
 		end
 		
-		local cost = vgui.Create("DLabel", menu)
-		cost:SetFont("MenuFontSmall")
-		cost:SetTextColor(Color(255, 255, 0, 255))
-		if v.price == 0 then
-			cost:SetText(lang.free)
-		else
-			cost:SetText(v.price)
+		if v.price then
+			local cost = vgui.Create("DLabel", menu)
+			cost:SetFont("MenuFontSmall")
+			cost:SetTextColor(Color(255, 255, 0, 255))
+			if v.price == 0 then
+				cost:SetText(LangString("free"))
+			else
+				cost:SetText(v.price)
+			end
+			cost:SizeToContents()
+			cost:SetPos(w - x - cost:GetWide(), y)
 		end
-		cost:SizeToContents()
-		cost:SetPos(w - x - cost:GetWide(), y)
 	end
 end
 
@@ -747,9 +982,9 @@ function GM:OpenLanguageMenu(short)
 		if !IsValid(langSettings) then return end
 		
 		local menu = {
-			{lang.menu_disconnect, function() RunConsoleCommand("disconnect") end, true},
-			{lang.menu_spectate, function() langSettings:Remove() if LocalPlayer():Team() != TEAM_SPECTATOR then RunConsoleCommand("hl1_coop_spectate") end end},
-			{lang.menu_joingame, function() langSettings:Remove() if LocalPlayer():Team() == TEAM_SPECTATOR then RunConsoleCommand("hl1_coop_spectate") end end},
+			{"menu_disconnect", function() RunConsoleCommand("disconnect") end, true},
+			{"menu_spectate", function() langSettings:Remove() if LocalPlayer():Team() != TEAM_SPECTATOR then RunConsoleCommand("hl1_coop_spectate") end end},
+			{"menu_joingame", function() langSettings:Remove() if LocalPlayer():Team() == TEAM_SPECTATOR then RunConsoleCommand("hl1_coop_spectate") end end},
 		}
 		
 		local menuEntryPos = langSettings:GetTall() - 20
@@ -758,7 +993,7 @@ function GM:OpenLanguageMenu(short)
 			menuEntryPos = menuEntryPos - langSettings:GetTall() / 10
 			k = vgui.Create("DLabel", langSettings)
 			k:SetFont("MenuFont")
-			k:SetText(v[1])
+			k:SetText(LangString(v[1]))
 			k:SetTextColor(menuTextCol)
 			k:SizeToContents()
 			k:SetPos(langSettings:GetWide() / 2 - k:GetWide() / 2, menuEntryPos)
@@ -855,7 +1090,7 @@ end
 
 function GM:OnLanguageMenuClose()
 	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then
-		hook.Run("OpenStartMenu")
+		hook.Run("StartMenuReload")
 	end
 end
 
@@ -897,24 +1132,19 @@ function GM:OpenQuickMenu()
 		self:SetKeyboardInputEnabled(false)
 	end
 
+	local margin = 20
 	local maxwidth = quickMenu:GetWide()
-	for k, v in pairs(options) do
-		local tw, th = surface.GetTextSize(v[1])
-		tw = tw + 44
-		if tw > quickMenuW then
-			quickMenuW = tw
-		end
-		
+	for k, v in pairs(options) do		
 		local l = vgui.Create("DLabel", quickMenu)
 		l:Dock(TOP)
-		l:DockMargin(20, 20, 0, -16)
+		l:DockMargin(margin, 20, 0, -16)
 		l:SetTextColor(menuTextCol)
 		l:SetFont(font)
-		l:SetText(v[1])
+		l:SetText(LangString(v[1]))
 		l:SizeToContents()
-		local textwidth = l:GetWide() + 20
+		local textwidth = l:GetWide() + margin*2
 		if textwidth > maxwidth then
-			maxwidth = textwidth + 30
+			maxwidth = textwidth
 		end
 		if !v[3] or v[3]() then
 			l:SetMouseInputEnabled(true)
@@ -997,7 +1227,7 @@ function GM:OpenSWEPMenu()
 	menuBackground:SetSize(menuW - menuContentGap*2, menuH / 1.4)
 	menuBackground:SetPos(menuContentGap, menuTitle:GetTall() + menuContentGap)
 	menuBackground:SetPaintBackground(true)
-	menuBackground:SetBackgroundColor(Color(100, 100, 100, 180))
+	menuBackground:SetBackgroundColor(menuBackgroundColor)
 	local menuBackgroundW, menuBackgroundH = menuBackground:GetSize()
 	local wepList = vgui.Create("DIconLayout", menuBackground)
 	wepList:SetSize(menuBackgroundW, menuBackgroundH)
@@ -1051,7 +1281,7 @@ function GM:OpenSWEPMenu()
 	
 	local closeButton = vgui.Create("DLabel", menu)
 	closeButton:SetFont("MenuFont")
-	closeButton:SetText(lang.menu_close)
+	closeButton:SetText(LangString("menu_close"))
 	closeButton:SizeToContents()
 	closeButton:SetPos(menuW / 2 - closeButton:GetWide() / 2, menuH - closeButton:GetTall() - 32)
 	closeButton:SetMouseInputEnabled(true)
@@ -1197,9 +1427,9 @@ function GM:OpenMainMenu()
 			k = vgui.Create("DLabel", self)
 			k:SetPos(menuW / 8, menuEntryPos)
 			k:SetFont("MenuFont")
-			k:SetText(v[1])
+			k:SetText(LangString(v[1]))
 			if namefunc and namefunc() then
-				k:SetText(namefunc())
+				k:SetText(LangString(namefunc()))
 			end
 			k:SetTextColor(menuTextCol)
 			k:SizeToContents()
@@ -1246,38 +1476,40 @@ end
 
 function GM:PlayerSettingsOptions()
 	local settingscvars = {
-		{"DCheckBoxLabel", lang.configmenu_halos, "hl1_coop_cl_drawhalos", 1},
-		{"DCheckBoxLabel", lang.configmenu_hints, "hl1_coop_cl_showhints", 1},
-		{"DCheckBoxLabel", lang.configmenu_score, "hl1_coop_cl_showscore", 1},
-		{"DCheckBoxLabel", lang.configmenu_subtitles, "hl1_coop_cl_subtitles", 1},
-		{"DCheckBoxLabel", lang.configmenu_chatsnds, "hl1_coop_cl_chatsounds", 1},
-		{"DCheckBoxLabel", lang.configmenu_autoswitch, "hl1_coop_cl_autoswitch", 1},
-		{"DCheckBoxLabel", lang.configmenu_firelight, "hl1_cl_firelight", 1},
-		{"DCheckBoxLabel", lang.configmenu_chair, "hl1_cl_crosshair", 1},
-		{"DNumSlider", lang.configmenu_chairscale, "hl1_cl_crosshair_scale", 1, 1, 1, 4},
-		{"DNumSlider", lang.configmenu_vmfov, "hl1_cl_viewmodelfov", 90, 0, 70, 120},
-		{"DComboBox", lang.configmenu_bobstyle, "hl1_coop_cl_bobstyle", 1, choices = {"Half-Life", "Half-Life WON", "Realistic", "Half-Life: Source", "Quake 3", "Unreal Tournament"}},
-		{"DCheckBoxLabel", lang.configmenu_custombob, "hl1_coop_cl_bobcustom", 1},
-		{"DCheckBoxLabel", lang.configmenu_viewbob, "hl1_cl_viewbob", 1},
-		{"DNumSlider", "bob", "hl1_cl_bob", 0.01, 2, 0, .1},
-		{"DNumSlider", "bobcycle", "hl1_cl_bobcycle", 0.8, 1, 0.3, 1},
-		{"DNumSlider", "bobup", "hl1_cl_bobup", 0.5, 1, 0, 1},
-		{"DNumSlider", "rollangle", "hl1_cl_rollangle", 2, 0, 0, 5},
-		{"DNumSlider", "rollspeed", "hl1_cl_rollspeed", 200, 0, 0, 400},
+		{"DCheckBoxLabel", "configmenu_halos", "hl1_coop_cl_drawhalos", 1},
+		{"DCheckBoxLabel", "configmenu_hints", "hl1_coop_cl_showhints", 1},
+		{"DCheckBoxLabel", "configmenu_score", "hl1_coop_cl_showscore", 1},
+		{"DCheckBoxLabel", "configmenu_subtitles", "hl1_coop_cl_subtitles", 1},
+		{"DCheckBoxLabel", "configmenu_chatsnds", "hl1_coop_cl_chatsounds", 1},
+		{"DCheckBoxLabel", "configmenu_autoswitch", "hl1_coop_cl_autoswitch", 1},
+		{"DCheckBoxLabel", "configmenu_firelight", "hl1_cl_firelight", 1},
+		{"DCheckBoxLabel", "configmenu_muzzleflash", "hl1_cl_muzzleflash", 1},
+		{"DCheckBoxLabel", "configmenu_muzzlesmoke", "hl1_cl_muzzlesmoke", 1},
+		{"DCheckBoxLabel", "configmenu_chair", "hl1_cl_crosshair", 1},
+		{"DNumSlider", "configmenu_chairscale", "hl1_cl_crosshair_scale", 1, 1, 1, 4},
+		{"DNumSlider", "configmenu_vmfov", "hl1_cl_viewmodelfov", 90, 0, 70, 120},
+		{"DComboBox", "configmenu_bobstyle", "hl1_coop_cl_bobstyle", 1, choices = {"Half-Life", "Half-Life WON", "Realistic", "Half-Life: Source", "Quake 3", "Unreal Tournament"}},
+		{"DCheckBoxLabel", "configmenu_custombob", "hl1_coop_cl_bobcustom", 1},
+		{"DCheckBoxLabel", "configmenu_viewbob", "hl1_cl_viewbob", 1},
+		{"DNumSlider", "configmenu_bob", "hl1_cl_bob", 0.01, 2, 0, 0.05},
+		{"DNumSlider", "bobcycle", "hl1_cl_bobcycle", 0.8, 1, 0.3, 1, hidden = true},
+		{"DNumSlider", "bobup", "hl1_cl_bobup", 0.5, 1, 0, 1, hidden = true},
+		{"DNumSlider", "configmenu_rollangle", "hl1_cl_rollangle", 2, 0, 0, 5},
+		{"DNumSlider", "configmenu_rollspeed", "hl1_cl_rollspeed", 200, 0, 100, 400},
 	}
 	return settingscvars
 end
 
 function GM:PlayerSettingsHUDOptions()
 	local hudsettings = {
-		{"DCheckBoxLabel", lang.configmenu_gsrchud, "hl1_coop_cl_disablehud", 0},
-		{"DComboBox", "[GSRCHUD] "..lang.configmenu_theme, "gsrchud_theme", 0},
-		{"DCheckBoxLabel", "[GSRCHUD] "..lang.configmenu_chaircol, "hl1_cl_crosshair_gsrchud", 1},
-		{"DCheckBoxLabel", "[GSRCHUD] "..lang.configmenu_dscreen, "gsrchud_deathcam", 1},
-		{"DCheckBoxLabel", "[GSRCHUD] "..lang.configmenu_skipempty, "gsrchud_skipempty", 1},
-		{"DCheckBoxLabel", "[GSRCHUD] "..lang.configmenu_loadingscreen, "gsrchud_loading", 1},
-		{"DNumSlider", "[GSRCHUD] "..lang.configmenu_scale, "gsrchud_scale", 1, 1, 1, 4},
-		{"DNumSlider", "[GSRCHUD] "..lang.configmenu_alpha, "gsrchud_alpha", 100, 0, 0, 255},
+		{"DCheckBoxLabel", "configmenu_gsrchud", "hl1_coop_cl_disablehud", 0},
+		{"DComboBox", "[GSRCHUD] "..LangString("configmenu_theme"), "gsrchud_theme", 0},
+		{"DCheckBoxLabel", "[GSRCHUD] "..LangString("configmenu_chaircol"), "hl1_cl_crosshair_gsrchud", 1},
+		{"DCheckBoxLabel", "[GSRCHUD] "..LangString("configmenu_dscreen"), "gsrchud_deathcam", 1},
+		{"DCheckBoxLabel", "[GSRCHUD] "..LangString("configmenu_skipempty"), "gsrchud_skipempty", 1},
+		{"DCheckBoxLabel", "[GSRCHUD] "..LangString("configmenu_loadingscreen"), "gsrchud_loading", 1},
+		{"DNumSlider", "[GSRCHUD] "..LangString("configmenu_scale"), "gsrchud_scale", 1, 1, 1, 4},
+		{"DNumSlider", "[GSRCHUD] "..LangString("configmenu_alpha"), "gsrchud_alpha", 100, 0, 0, 255},
 	}
 	return hudsettings
 end
@@ -1296,7 +1528,7 @@ function GM:OpenPlayerSettings()
 	
 	local menuTitle = vgui.Create("DLabel", plySettings)
 	menuTitle:SetFont("MenuFont")
-	menuTitle:SetText(lang.menu_configuration)
+	menuTitle:SetText(LangString("menu_configuration"))
 	menuTitle:SizeToContents()
 	menuTitle:SetPos(menuTitleX, menuTitleY)
 	menuTitle:SetColor(menuTextCol)
@@ -1305,59 +1537,63 @@ function GM:OpenPlayerSettings()
 	backgr:SetSize(plySettingsW - menuContentGap, plySettingsH / 1.24)
 	backgr:SetPos(plySettingsW / 2 - backgr:GetWide() / 2, menuTitle:GetTall() + menuContentGap)
 	backgr:SetPaintBackground(true)
-	backgr:SetBackgroundColor(Color(100, 100, 100, 180))
+	backgr:SetBackgroundColor(menuBackgroundColor)
 	
 	for k, v in pairs(settingscvars) do
-		local k = vgui.Create(v[1], backgr)
-		if v[1] != "DComboBox" then
-			k:SetText(v[2])
-			k:SetConVar(v[3])
-			if v[1] == "DNumSlider" then
-				k:SetDecimals(v[5])
-				k:SetMinMax(v[6], v[7])
-			end
-		else
-			--[[local text = vgui.Create("DLabel", backgr)
-			text:SetFont("MenuFontSmall")
-			text:SetText(v[2])
-			text:SizeToContents()
-			text:Dock(TOP)]]
-			k:SetSortItems(false)
-			local cvar = GetConVar(v[3])
-			if cvar then
-				local vName = v.choices[cvar:GetInt()] or ""
-				k:SetText(v[2]..": "..vName)
-				if v.choices then
-					for index, name in ipairs(v.choices) do
-						k:AddChoice(name)
-					end
-				end
-				function k:OnSelect(index, value, data)
-					cvar:SetInt(index)
-				end
-				function k:Think()
-					local choise = v.choices[cvar:GetInt()]
-					if choise then
-						self:SetText(v[2]..": "..choise)
-					end
-				end
-			end
-		end
-		k:Dock(TOP)
-		k:DockMargin( 20, 12, 20, 0 )
-	end
-	if GSRCHUD then
-		for k, v in pairs(hudsettings) do
+		if !v.hidden then
 			local k = vgui.Create(v[1], backgr)
+			local text = LangString(v[2])
 			if v[1] != "DComboBox" then
-				k:SetText(v[2])
+				k:SetText(text)
 				k:SetConVar(v[3])
 				if v[1] == "DNumSlider" then
 					k:SetDecimals(v[5])
 					k:SetMinMax(v[6], v[7])
 				end
 			else
-				k:SetValue(v[2])
+				--[[local text = vgui.Create("DLabel", backgr)
+				text:SetFont("MenuFontSmall")
+				text:SetText(text)
+				text:SizeToContents()
+				text:Dock(TOP)]]
+				k:SetSortItems(false)
+				local cvar = GetConVar(v[3])
+				if cvar then
+					local vName = v.choices[cvar:GetInt()] or ""
+					k:SetText(text..": "..vName)
+					if v.choices then
+						for index, name in ipairs(v.choices) do
+							k:AddChoice(name)
+						end
+					end
+					function k:OnSelect(index, value, data)
+						cvar:SetInt(index)
+					end
+					function k:Think()
+						local choise = v.choices[cvar:GetInt()]
+						if choise then
+							self:SetText(text..": "..choise)
+						end
+					end
+				end
+			end
+			k:Dock(TOP)
+			k:DockMargin( 20, 12, 20, 0 )
+		end
+	end
+	if GSRCHUD then
+		for k, v in pairs(hudsettings) do
+			local text = LangString(v[2])
+			local k = vgui.Create(v[1], backgr)
+			if v[1] != "DComboBox" then
+				k:SetText(text)
+				k:SetConVar(v[3])
+				if v[1] == "DNumSlider" then
+					k:SetDecimals(v[5])
+					k:SetMinMax(v[6], v[7])
+				end
+			else
+				k:SetValue(text)
 				if v[3] == "gsrchud_theme" then
 					for i, theme in pairs(GSRCHUD.theme.all()) do
 						k:AddChoice(theme.name)
@@ -1374,7 +1610,7 @@ function GM:OpenPlayerSettings()
 	
 	local def = vgui.Create("DLabel", plySettings)
 	def:SetFont("MenuFont")
-	def:SetText(lang.configmenu_default)
+	def:SetText(LangString("configmenu_default"))
 	def:SizeToContents()
 	def:SetPos(plySettingsW / 2 - def:GetWide() / 2, plySettingsH - def:GetTall() - 10)
 	def:SetTextColor(menuTextCol)
@@ -1410,7 +1646,7 @@ function GM:QuitDialog()
 	
 	local text = vgui.Create("DLabel", quitMenu)
 	text:SetFont("MenuFont")
-	text:SetText(lang.quit_sure)
+	text:SetText(LangString("quit_sure"))
 	text:SizeToContents()
 	quitMenu:SetSize(text:GetWide() + ScrW() / 24, quitMenuH)
 	local quitMenuW, quitMenuH = quitMenu:GetSize()
@@ -1420,7 +1656,7 @@ function GM:QuitDialog()
 	
 	local button_yes = vgui.Create("DLabel", quitMenu)
 	button_yes:SetFont("MenuFont")
-	button_yes:SetText(lang.yes)
+	button_yes:SetText(LangString("yes"))
 	button_yes:SizeToContents()
 	button_yes:SetPos(quitMenuW / 2 - button_yes:GetWide() - 70, quitMenuH / 1.1 - button_yes:GetTall())
 	button_yes:SetTextColor(menuTextCol)
@@ -1438,7 +1674,7 @@ function GM:QuitDialog()
 	
 	local button_no = vgui.Create("DLabel", quitMenu)
 	button_no:SetFont("MenuFont")
-	button_no:SetText(lang.no)
+	button_no:SetText(LangString("no"))
 	button_no:SizeToContents()
 	button_no:SetPos(quitMenuW / 2 + 70, quitMenuH / 1.1 - button_no:GetTall())
 	button_no:SetTextColor(menuTextCol)
@@ -1482,6 +1718,10 @@ function GM:VoteMenu()
 	voteMenu:SetSize(self.Menu.MainMenuFrame:GetWide() - ScrW() / 12, voteOptionCount * (fontHeight + 4) + 40)
 	local voteMenuStart = 0
 	local voteMenuW, voteMenuH = voteMenu:GetSize()
+	local voteMenuY = ScrH() / 3.5 - voteMenuH / 10
+	if ScrH() - voteMenuH < 200 then
+		voteMenuY = ScrH() / 1.25 - voteMenuH / 1.25
+	end
 	voteMenu:SetBackgroundColor(menuframeColor)
 	voteMenu:MakePopup()
 	voteMenu.AnimType = 1
@@ -1497,7 +1737,10 @@ function GM:VoteMenu()
 		if v.available and !v.available() then
 			continue
 		end
-		local tw, th = surface.GetTextSize(v[1])
+		
+		local text = LangString(v[1])
+		
+		local tw, th = surface.GetTextSize(text)
 		tw = tw + 44
 		if tw > voteMenuW then
 			voteMenuW = tw
@@ -1508,7 +1751,7 @@ function GM:VoteMenu()
 		l:DockMargin(20, 20, 0, -16)
 		l:SetTextColor()
 		l:SetFont(font)
-		l:SetText(v[1])
+		l:SetText(text)
 		l:SizeToContents()
 		l:SetMouseInputEnabled(true)
 		function l:OnCursorEntered()
@@ -1542,7 +1785,7 @@ function GM:VoteMenu()
 	
 	function voteMenu:AnimationThink()
 		mainMenuPosX, mainMenuPosY = GAMEMODE.Menu.MainMenuFrame:GetPos()
-		self:SetPos(mainMenuPosX + GAMEMODE.Menu.MainMenuFrame:GetWide(), ScrH() / 3 - voteMenuH / 6)
+		self:SetPos(mainMenuPosX + GAMEMODE.Menu.MainMenuFrame:GetWide(), voteMenuY)
 	
 		local FT = RealFrameTime()
 		if self.AnimType == 1 then
@@ -1572,7 +1815,7 @@ function GM:OpenMapVote()
 	
 	local menuTitle = vgui.Create("DLabel", mapVoteMenu)
 	menuTitle:SetFont("MenuFont")
-	menuTitle:SetText(lang.votemenu_mapvote)
+	menuTitle:SetText(LangString("votemenu_mapvote"))
 	menuTitle:SizeToContents()
 	menuTitle:SetPos(menuTitleX, menuTitleY)
 	menuTitle:SetColor(menuTextCol)
@@ -1588,7 +1831,7 @@ function GM:OpenMapVote()
 	for k, v in ipairs(Campaigns) do
 		voteMap = vgui.Create("DScrollPanel", sheet)
 		voteMap:SetPaintBackground(true)
-		voteMap:SetBackgroundColor(Color(100, 100, 100, 180))
+		voteMap:SetBackgroundColor(menuBackgroundColor)
 		sheet:AddSheet(v.Title, voteMap, v.Icon)	
 		local mapList = vgui.Create("DIconLayout", voteMap)
 		mapList:SetSize(voteMapW, voteMapH)
@@ -1630,7 +1873,7 @@ function GM:OpenMapVote()
 	
 	local VmapButton = vgui.Create("DLabel", mapVoteMenu)
 	VmapButton:SetFont("MenuFont")
-	VmapButton:SetText(lang.votemenu_mapvote_call)
+	VmapButton:SetText(LangString("votemenu_mapvote_call"))
 	VmapButton:SizeToContents()
 	VmapButton:SetPos(mapVoteMenuW / 2 - VmapButton:GetWide() / 2, mapVoteMenuH - VmapButton:GetTall() - 32)
 	VmapButton:SetMouseInputEnabled(true)
@@ -1660,7 +1903,7 @@ function GM:OpenKickVote()
 	
 	local menuTitle = vgui.Create("DLabel", voteKickMenu)
 	menuTitle:SetFont("MenuFont")
-	menuTitle:SetText(lang.votemenu_kick)
+	menuTitle:SetText(LangString("votemenu_kick"))
 	menuTitle:SizeToContents()
 	menuTitle:SetPos(menuTitleX, menuTitleY)
 	menuTitle:SetColor(menuTextCol)
@@ -1671,7 +1914,7 @@ function GM:OpenKickVote()
 	local voteKickX, voteKickY = menuContentGap, menuTitle:GetTall() + menuContentGap
 	voteKick:SetPos(voteKickX, voteKickY)
 	voteKick:SetSize(voteKickMenuW - voteKickX*2, voteKickMenuH - voteKickY - 100)
-	voteKick:SetBackgroundColor(Color(100, 100, 100, 180))
+	voteKick:SetBackgroundColor(menuBackgroundColor)
 	
 	local plyList = vgui.Create("DScrollPanel", voteKick)
 	plyList:SetPos(25, 25)
@@ -1701,7 +1944,7 @@ function GM:OpenKickVote()
 	
 	local kickButton = vgui.Create("DLabel", voteKickMenu)
 	kickButton:SetFont("MenuFont")
-	kickButton:SetText(lang.votemenu_kick_call)
+	kickButton:SetText(LangString("votemenu_kick_call"))
 	kickButton:SizeToContents()
 	kickButton:SetPos(voteKickMenu:GetWide() / 2 - kickButton:GetWide() / 2, voteKickMenu:GetTall() - kickButton:GetTall() - 32)
 	kickButton:SetMouseInputEnabled(true)
@@ -1731,7 +1974,7 @@ function GM:OpenBanVote()
 	
 	local menuTitle = vgui.Create("DLabel", voteKickMenu)
 	menuTitle:SetFont("MenuFont")
-	menuTitle:SetText(lang.votemenu_ban)
+	menuTitle:SetText(LangString("votemenu_ban"))
 	menuTitle:SizeToContents()
 	menuTitle:SetPos(menuTitleX, menuTitleY)
 	menuTitle:SetColor(menuTextCol)
@@ -1742,7 +1985,7 @@ function GM:OpenBanVote()
 	local voteKickX, voteKickY = menuContentGap, menuTitle:GetTall() + menuContentGap
 	voteKick:SetPos(voteKickX, voteKickY)
 	voteKick:SetSize(voteKickMenuW / 2, voteKickMenuH - voteKickY - menuContentGap)
-	voteKick:SetBackgroundColor(Color(100, 100, 100, 180))
+	voteKick:SetBackgroundColor(menuBackgroundColor)
 	
 	local plyList = vgui.Create("DScrollPanel", voteKick)
 	plyList:SetPos(25, 25)
@@ -1832,7 +2075,7 @@ function GM:ModelSelectionMenu()
 	
 	local menuTitle = vgui.Create("DLabel", plyModel)
 	menuTitle:SetFont("MenuFont")
-	menuTitle:SetText(lang.menu_playermodel)
+	menuTitle:SetText(LangString("menu_playermodel"))
 	menuTitle:SizeToContents()
 	menuTitle:SetPos(menuTitleX, menuTitleY)
 	menuTitle:SetColor(menuTextCol)
@@ -1845,7 +2088,7 @@ function GM:ModelSelectionMenu()
 	--backgr:SetSize(plyModelW - 20, plyModelH - 170)
 	--backgr:SetPos(plyModelW / 2 - backgr:GetWide() / 2, menuTitle:GetTall() + 40)
 	backgr:SetPaintBackground(true)
-	backgr:SetBackgroundColor(Color(100, 100, 100, 180))
+	backgr:SetBackgroundColor(menuBackgroundColor)
 	sheet:AddSheet("Model", backgr, "icon16/status_online.png")
 	
 	local List = vgui.Create("DIconLayout", backgr)
@@ -1890,7 +2133,7 @@ function GM:ModelSelectionMenu()
 	
 	local applyb = vgui.Create("DLabel", plyModel)
 	applyb:SetFont("MenuFont")
-	applyb:SetText(lang.menu_apply)
+	applyb:SetText(LangString("menu_apply"))
 	applyb:SizeToContents()
 	applyb:SetPos(plyModelW / 2 - applyb:GetWide() / 2 - button_gap, plyModelH - applyb:GetTall() - 10)
 	applyb:SetTextColor(menuTextCol)
@@ -1926,7 +2169,7 @@ function GM:ModelSelectionMenu()
 	
 	local closeb = vgui.Create("DLabel", plyModel)
 	closeb:SetFont("MenuFont")
-	closeb:SetText(lang.menu_cancel)
+	closeb:SetText(LangString("menu_cancel"))
 	closeb:SizeToContents()
 	closeb:SetPos(plyModelW / 2 - closeb:GetWide() / 2 + button_gap, plyModelH - closeb:GetTall() - 10)
 	closeb:SetTextColor(menuTextCol)
@@ -1975,13 +2218,13 @@ function GM:OpenServerSettings()
 	backgr:SetSize(plySettingsW - menuContentGap, plySettingsH / 1.24)
 	backgr:SetPos(plySettingsW / 2 - backgr:GetWide() / 2, menuTitle:GetTall() + menuContentGap)
 	backgr:SetPaintBackground(true)
-	backgr:SetBackgroundColor(Color(100, 100, 100, 180))
+	backgr:SetBackgroundColor(menuBackgroundColor)
 	
 	local adminsettingscvars = hook.Run("AdminSettingsTable")
 	
 	for k, v in pairs(adminsettingscvars) do
 		local k = vgui.Create(v[1], backgr)
-		k:SetText(v[2])
+		k:SetText(LangString(v[2]))
 		if v[1] == "DNumSlider" then
 			k:SetDecimals(v[5])
 			k:SetMinMax(v[6], v[7])
@@ -1997,7 +2240,7 @@ function GM:OpenServerSettings()
 		else
 			k:SetMouseInputEnabled(true)
 			local bDisable = vgui.Create("DButton", k)
-			bDisable:SetText("Disable")
+			bDisable:SetText(LangString("adminmenu_off"))
 			bDisable:Dock(RIGHT)
 			function bDisable:DoClick()
 				RunServerCommand(v[3], "0")
@@ -2006,7 +2249,7 @@ function GM:OpenServerSettings()
 				end
 			end
 			local bEnable = vgui.Create("DButton", k)
-			bEnable:SetText("Enable")
+			bEnable:SetText(LangString("adminmenu_on"))
 			bEnable:Dock(RIGHT)
 			function bEnable:DoClick()
 				RunServerCommand(v[3], "1")
@@ -2021,7 +2264,7 @@ function GM:OpenServerSettings()
 	
 	local def = vgui.Create("DLabel", plySettings)
 	def:SetFont("MenuFont")
-	def:SetText(lang.adminmenu_defaultall)
+	def:SetText(LangString("adminmenu_defaultall"))
 	def:SizeToContents()
 	def:SetPos(plySettingsW / 2 - def:GetWide() / 2, plySettingsH - def:GetTall() - 10)
 	def:SetTextColor(menuTextCol)
@@ -2063,16 +2306,14 @@ function GM:CloseSubMenus()
 end
 
 function GM:PreRender()
-	if gui.IsGameUIVisible() and self.Menu.MainMenuFrame and self.Menu.MainMenuFrame:IsVisible() then
-		self:CloseMenus()
-	end
-	if input.IsKeyDown(KEY_ESCAPE) and gui.IsGameUIVisible() then
-		--if !showGameUI then
+	if gui.IsGameUIVisible() then
+		if self.Menu.MainMenuFrame and self.Menu.MainMenuFrame:IsVisible() then
+			self:CloseMenus()
+		end
+		if input.IsKeyDown(KEY_ESCAPE) then
 			gui.HideGameUI()
 			self:OpenMainMenu()
 			return true
-		--end
-	--else
-		--showGameUI = false
+		end
 	end
 end

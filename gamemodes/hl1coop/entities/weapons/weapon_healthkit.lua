@@ -236,7 +236,8 @@ net.Receive("HL1MedkitRevivePlayer", function(len, ply)
 		end
 		
 		pl:SetPos(pos)
-		pl:SetHealth(25)
+		local hp = math.min(pl:GetMaxHealth(), 25)
+		pl:SetHealth(hp)
 		pl:SetArmor(0)
 		pl:EmitSound("Weapon_Gauss.Zap1")
 		

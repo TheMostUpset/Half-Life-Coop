@@ -18,7 +18,9 @@ MAP.npcLagFixBlacklist = {
 
 MAP.FallToDeath = {
 	{Vector(4960, 2752, -236), Vector(3054, 3600, -279)}, -- stay back gordon
+	{Vector(5825, 2680, -2084), Vector(6112, 2967, -1733)}, -- after akira elevator
 	{Vector(4560, 3943, -2288), Vector(5248, 3319, -2180)}, -- bullsquid
+	{Vector(4320, 4343, -2400), Vector(4032, 4631, -2720)},
 	{Vector(4672, 5231, -3824), Vector(5472, 6191, -3790)} -- crates
 }
 

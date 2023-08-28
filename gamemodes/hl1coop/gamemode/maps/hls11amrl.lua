@@ -31,6 +31,17 @@ end
 
 function MAP:ModifyMapEntities()
 	GAMEMODE:CreateWeaponEntity("weapon_mp5", Vector(-6316, 1015, 567), Angle())
+	
+	if game.MaxPlayers() > 1 then
+		local tentFix = ents.Create("hl1_tentacle_fix")
+		if IsValid(tentFix) then
+			local pos = Vector(-5465, 1939, 1222)
+			tentFix:SetPos(pos)
+			tentFix:Spawn()
+			tentFix.Radius = 500
+			tentFix.UpdateTime = .75
+		end
+	end
 end
 
 function MAP:CreateExtraEnemies()

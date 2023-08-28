@@ -82,4 +82,23 @@ if HL1AHUD then
 		local ply = LocalPlayer()
 		return GetConVar(PREFIX..'death'):GetBool() and ply:Team() != TEAM_SPECTATOR and ply:GetObserverMode() == OBS_MODE_NONE and !IsValid(ply:GetObserverTarget()) and !ply:IsChasing() and !cvar_thirdperson:GetBool()
 	end
+	if GSRCHUD then
+		-- adding some sprites from gsrchud if both installed
+		local hud2 = HL1AHUD.GenerateFileData(surface.GetTextureID('gsrchud/default/640hud2'), 256, 256)
+		local hud5 = HL1AHUD.GenerateFileData(surface.GetTextureID('gsrchud/default/640hud5'), 256, 256)
+		HL1AHUD.AddSprite('rocketlauncher_release', hud2, 0, 45, 170, 45)
+		HL1AHUD.AddSprite('rocketlauncher_release_selected', hud5, 0, 45, 170, 45)
+		HL1AHUD.AddWeaponSprite('weapon_rpg', 'rocketlauncher_release', 'rocketlauncher_release_selected')
+		local tfchud6 = HL1AHUD.GenerateFileData(surface.GetTextureID('gsrchud/default/tfchud6'), 256, 256)
+		local tfchud5 = HL1AHUD.GenerateFileData(surface.GetTextureID('gsrchud/default/tfchud5'), 256, 256)
+		HL1AHUD.AddSprite('medkit', tfchud6, 0, 90, 170, 45)
+		HL1AHUD.AddSprite('medkit_selected', tfchud5, 0, 180, 170, 45)
+		HL1AHUD.AddWeaponSprite('weapon_healthkit', 'medkit', 'medkit_selected')
+	end
+	HL1AHUD.AddWeaponSprite('weapon_357', 'magnum', 'magnum_selected')
+	HL1AHUD.AddWeaponSprite('weapon_glock', 'pistol', 'pistol_selected')
+	HL1AHUD.AddWeaponSprite('weapon_crossbow', 'crossbow', 'crossbow_selected')
+	HL1AHUD.AddWeaponSprite('weapon_crowbar', 'crowbar', 'crowbar_selected')
+	HL1AHUD.AddWeaponSprite('weapon_mp5', '9mmar', '9mmar_selected')
+	HL1AHUD.AddWeaponSprite('weapon_shotgun', 'shotgun', 'shotgun_selected')
 end

@@ -140,9 +140,9 @@ function ENT:OnTakeDamage(dmginfo)
 	if self:Health() <= 0 then
 		self.Broken = true
 		self:Off()
-		util.BlastDamage(self, pevAttacker, self:GetPos(), 64, 50)
+		util.BlastDamage(self, pevAttacker, self:WorldSpaceCenter(), 64, 50)
 		local effectdata = EffectData()
-		effectdata:SetOrigin(self:GetPos())
+		effectdata:SetOrigin(self:WorldSpaceCenter())
 		util.Effect("Explosion", effectdata, true, true)
 		return
 	end

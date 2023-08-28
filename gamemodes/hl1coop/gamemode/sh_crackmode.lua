@@ -76,6 +76,13 @@ end
 
 if SERVER then
 
+	-- manipulating these bones makes HL1 NPCs invisible
+	local boneBlacklist = {
+		["Bip01 R Clavicle"] = true,
+		["Bip01 R UpperArm"] = true,
+		["Bip01 R Forearm"] = true
+	}
+
 	local funcEnts = {
 		["func_door"] = true,
 		["func_platrot"] = true,
@@ -93,18 +100,24 @@ if SERVER then
 			if ent:GetClass() != "gmod_hands" then
 				if math.random(0, 1) == 1 then
 					for i = 0, bonecount do
-						ent:ManipulateBoneScale(i, Vector(1,1,1) + VectorRand() * math.Rand(0,3))
+						if !boneBlacklist[ent:GetBoneName(i)] then
+							ent:ManipulateBoneScale(i, Vector(1,1,1) + VectorRand() * math.Rand(0,3))
+						end
 					end
 				end
 				if math.random(0, 2) == 0 then
 					for i = 0, bonecount do
-						ent:ManipulateBoneScale(i, ent:GetManipulateBoneScale(i) * math.Rand(.3,2))
+						if !boneBlacklist[ent:GetBoneName(i)] then
+							ent:ManipulateBoneScale(i, ent:GetManipulateBoneScale(i) * math.Rand(.3,2))
+						end
 					end
 				end
 				if math.random(0, 1) == 0 then
 					local rand = math.Rand(.3,3)
 					for i = 0, bonecount do
-						ent:ManipulateBoneScale(i, ent:GetManipulateBoneScale(i) * rand)
+						if !boneBlacklist[ent:GetBoneName(i)] then
+							ent:ManipulateBoneScale(i, ent:GetManipulateBoneScale(i) * rand)
+						end
 					end
 				end
 			end
@@ -118,7 +131,10 @@ if SERVER then
 				end
 			end
 			if math.random(0, 1) == 1 then
-				ent:SetNWInt("BoneRotate", math.random(1, bonecount))
+				local randomBone = math.random(1, bonecount)
+				if !boneBlacklist[ent:GetBoneName(randomBone)] then
+					ent:SetNWInt("BoneRotate", randomBone)
+				end
 			end
 		end
 		
@@ -134,6 +150,10 @@ if SERVER then
 				timer.Simple(1, function()
 					if IsValid(ent) then
 						ent:SetKeyValue("speed", randomspeed)
+						if ent:GetClass() == "func_rotating" then
+							ent:SetKeyValue("maxspeed", randomspeed / 7)
+							ent:Spawn()
+						end
 					end
 				end)
 			end

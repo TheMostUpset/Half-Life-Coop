@@ -36,7 +36,7 @@ function meta:IsChasing()
 end
 
 function meta:IsSpectator()
-	return self:Team() == TEAM_SPECTATOR or self:IsDeadInSurvival()
+	return self:Team() == TEAM_SPECTATOR or self:IsDeadInSurvival() and (self.DiedInSurvival or self:GetScore() < cvar_price_respawn_survival:GetInt())
 end
 
 function meta:IsDeadInSurvival()
@@ -450,13 +450,15 @@ if SERVER then
 		self:SendLua("LocalPlayer().SpawnProtectionTime = CurTime() + "..t)
 	end
 	
-	function meta:ResetVars()
+	function meta:ResetVars(keeplj)
 		self.DeathEnt = nil
 		self.DeathPos = nil
 		self.DeathAng = nil
 		self.DeathDuck = nil
 		self.KilledByFall = nil
-		self:SetLongJump(false)
+		if !keeplj then
+			self:SetLongJump(false)
+		end
 	end
 	
 	function meta:ChasePlayer(ply)
@@ -533,17 +535,23 @@ if SERVER then
 	end
 	
 	function meta:SendScreenHintTop(text, lifetime)
+		if !istable(text) then
+			text = {text}
+		end
 		lifetime = lifetime or 8
 		net.Start("ShowScreenHintTop")
-		net.WriteString(text)
+		net.WriteTable(text)
 		net.WriteFloat(lifetime)
 		net.Send(self)
 	end
 
 	function meta:ChatMessage(msg, t)
+		if !istable(msg) then
+			msg = {msg}
+		end
 		t = t or 1
 		net.Start("ChatMessage")
-		net.WriteString(msg)
+		net.WriteTable(msg)
 		net.WriteUInt(t, 4)
 		net.Send(self)
 	end
