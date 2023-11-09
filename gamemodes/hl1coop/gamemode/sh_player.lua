@@ -370,7 +370,9 @@ if SERVER then
 	end
 	
 	function meta:GiveMedkit()
-		self:Give("weapon_healthkit")
+		if !GAMEMODE:Get1hpMode() then
+			self:Give("weapon_healthkit")
+		end
 	end
 	
 	function meta:DropWeaponBox(noowner)
