@@ -189,7 +189,7 @@ function ENT:DoMapChange(ply)
 	if !self:CanTrigger(ply) then return end
 	if self.MapToChange then
 		if ply and IsValid(ply) then
-			for k, v in pairs(ents.FindInPVS(ply:GetPos())) do
+			for k, v in ipairs(ents.FindInPVS(ply:GetPos())) do
 				if v:GetClass() == "info_landmark" and v:GetName() == self.landmark then
 					local fisrtPos = self.FirstPlayerPos or ply:GetPos()
 					local fisrtAng = self.FirstPlayerAng or ply:EyeAngles()

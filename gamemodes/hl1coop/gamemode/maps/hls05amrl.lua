@@ -21,7 +21,7 @@ function MAP:CreateViewPoints()
 	GAMEMODE:CreateViewPointEntity(Vector(563, -822, -362), Angle(35, -145, 0))
 	
 	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then
-		for k, v in pairs(ents.FindByClass("monster_bullchicken")) do
+		for k, v in ipairs(ents.FindByClass("monster_bullchicken")) do
 			v:Remove()
 		end
 	end
@@ -65,14 +65,14 @@ hook.Add("Modify1hpModeEntities", "1hpFixFallDamage", function()
 end)
 
 function MAP:FixMapEntities()	
-	for k, v in pairs(ents.FindByName("tent_barney2")) do
+	for k, v in ipairs(ents.FindByName("tent_barney2")) do
 		v:Remove()
 	end
 end
 
 function MAP:ModifyMapEntities()
 	local button = NULL
-	for k, v in pairs(ents.FindByName("liftbut1")) do
+	for k, v in ipairs(ents.FindByName("liftbut1")) do
 		if v:GetClass() == "func_button" then
 			button = v
 			v:Fire("Lock")
@@ -98,20 +98,20 @@ function MAP:ModifyMapEntities()
 		end
 	end
 	
-	for k, v in pairs(ents.FindByName("stopbarsp")) do
+	for k, v in ipairs(ents.FindByName("stopbarsp")) do
 		if v:GetClass() == "trigger_push" then
 			v:Remove()
 		end
 	end
 	
-	for k, v in pairs(ents.FindByClass("func_breakable")) do
+	for k, v in ipairs(ents.FindByClass("func_breakable")) do
 		local globalname = v:GetInternalVariable("globalname")
 		if globalname != "" and string.StartWith(globalname, "c1a4_breakable_") then
 			v:SetSaveValue("globalname", "")
 		end
 	end
 	
-	for k, v in pairs(ents.FindByClass("func_tracktrain")) do
+	for k, v in ipairs(ents.FindByClass("func_tracktrain")) do
 		local globalname = v:GetInternalVariable("globalname")
 		if globalname == "c1a4h_lift" then
 			v:SetSaveValue("globalname", "")
@@ -130,7 +130,7 @@ function MAP:ModifyMapEntities()
 	GAMEMODE:CreatePickupEntity("item_battery", Vector(8668, 11051, 300), Angle())
 	GAMEMODE:CreatePickupEntity("item_healthkit", Vector(8620, 11055, 300), Angle(0, 145, 0))
 	
-	for k, v in pairs(ents.FindInBox(Vector(12398, 10311, -4130), Vector(12333, 10251, -4200))) do
+	for k, v in ipairs(ents.FindInBox(Vector(12398, 10311, -4130), Vector(12333, 10251, -4200))) do
 		if v:GetClass() == "item_healthkit" then
 			v.RespawnTime = 5
 		end
@@ -171,7 +171,7 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 			end
 		end)
 		local box = ents.FindInBox(Vector(891, -5621, -2858), Vector(672, -5542, -2814))
-		for k, v in pairs(box) do
+		for k, v in ipairs(box) do
 			if v:IsPlayer() then
 				v:SetVelocity(Vector(1000, 0, 0))
 				timer.Simple(.05, function()
@@ -184,6 +184,21 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 		trainEnt = NULL
 	end
 	-- 05b below
+	--[[if ent:GetClass() == "scripted_sequence" and input == "BeginSequence" and ent:GetName() == "talking_barney2s" then
+		-- UGLIEST HACK TO MAKE TENTACLE GIB BARNEY
+		local tent_barney2
+		for k, v in ipairs(ents.FindByName("tent_barney2")) do
+			tent_barney2 = v
+		end
+		if tent_barney2 and IsValid(tent_barney2) and tent_barney2:Health() > 0 then
+			timer.Simple(1.5, function()
+				if tent_barney2 and IsValid(tent_barney2) and tent_barney2:Health() > 0 then
+					tent_barney2:SetMoveType(MOVETYPE_CUSTOM)
+					tent_barney2:SetPos(tent_barney2:GetPos() + Vector(0,0,1))
+				end
+			end)
+		end
+	end]]
 	if ent:GetClass() == "logic_relay" and input == "Trigger" then
 		if ent:GetName() == "init_rocket_fire" then
 			GAMEMODE:Checkpoint(6, Vector(7973, 11450, 70), Angle(), {tele0pos, tele2pos, tele3pos, tele4pos, tele5pos, tele6pos})
@@ -228,7 +243,7 @@ function MAP:OnMapRestart()
 	oxy = nil
 	fuel = nil
 	
-	for k,v in pairs(ents.FindByClass("env_smokestack")) do
+	for k,v in ipairs(ents.FindByClass("env_smokestack")) do
 		if v:GetName() == "engine_smoke" then
 			v:Fire("TurnOff")
 		end 
