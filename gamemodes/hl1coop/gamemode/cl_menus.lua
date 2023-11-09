@@ -106,7 +106,7 @@ function GM:VoteMenuOptions()
 		{"votemenu_friendlyfire", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "friendlyfire") end},
 		{"votemenu_speedrun", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "speedrunmode") end, "Speedrun mode which features:\n- Bunnyhop script\n- Speed indicator\n- No wait triggers\n- Allowed shortcuts\n- Players can't pickup other's weaponbox\n- Unlimited func_pushable velocity\n- Map records\n\nCauses map restart after activation"},
 		{"votemenu_survival", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "survivalmode") end, "Survival mode:\n- No respawns until someone reaches checkpoint\n- Map restarts if no alive players left\n- Medkit weapon available"},
-		{"1 HP mode", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "1hpmode") end, "1 HP mode:\nTrue hardcore\n- No medkits\n- No armor\n- Drop from crates replaced for random weapons\n\nCauses map restart after deactivation"},
+		{"1 HP mode", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "1hpmode") end, "1 HP mode:\nTrue hardcore\n- No medkits\n- No armor\n- Drop from crates replaced for random ammo\n\nCauses map restart after deactivation"},
 		{"Crack mode", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "crackmode") end, "Crack mode:\nEverything is fucked up\n\nCauses map restart"},
 		{"votemenu_skill1", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 1) end},
 		{"votemenu_skill2", function() self.Menu.MainMenuFrame:DoEndAnim() RunConsoleCommand("hl1_coop_callvote", "skill", 2) end},
@@ -1329,6 +1329,8 @@ function GM:OpenMainMenu()
 	local menuW, menuH = self.Menu.MainMenuFrame:GetSize()
 	local menuX, menuY = self.Menu.MainMenuFrame:GetPos()
 	local menuStart = 0 - menuW
+	local menuHideGap = menuW / 4
+	local menuHideFocusGap = 110
 	function self.Menu.MainMenuFrame:DoStartAnim()
 		surface.PlaySound(sndMenu1)
 		self.AnimType = 1
@@ -1345,7 +1347,7 @@ function GM:OpenMainMenu()
 		end
 	end
 	function self.Menu.MainMenuFrame:DoHideAnim()
-		menuStart = 40 - menuW
+		menuStart = menuHideGap - menuW
 		surface.PlaySound(sndMenu4)
 		self.AnimType = 3
 		if IsValid(GAMEMODE.Menu.voteMenu) and GAMEMODE.Menu.voteMenu:IsVisible() then GAMEMODE.Menu.voteMenu:DoHideAnim() end
@@ -1384,14 +1386,14 @@ function GM:OpenMainMenu()
 	function self.Menu.MainMenuFrame:OnCursorEntered()
 		if self.Hidden and (!self.NextAnim or self.NextAnim <= RealTime()) then
 			self.AnimType = 1
-			menuX = 150 - menuW
+			menuX = (menuHideGap + menuHideFocusGap) - menuW
 			self.NextAnim = RealTime() + .1
 		end
 	end
 	function self.Menu.MainMenuFrame:OnCursorExited()
 		if self.Hidden then
 			self.AnimType = 3
-			menuStart = 40 - menuW
+			menuStart = menuHideGap - menuW
 			self.NextAnim = RealTime() + .1
 		end
 	end
