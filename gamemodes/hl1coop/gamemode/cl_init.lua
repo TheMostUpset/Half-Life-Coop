@@ -660,10 +660,8 @@ function GM:PostPlayerDraw(ply)
 end
 
 function GM:PlayerBindPress(ply, bind, pressed)
-	if bind == "undo" or bind == "gmod_undo" then
-		if !self.IsSandboxDerived then
-			RunConsoleCommand("callmedic")
-		end
+	if (bind == "undo" or bind == "gmod_undo") and !game.SinglePlayer() and !self.IsSandboxDerived then
+		RunConsoleCommand("callmedic")
 	end	
     if bind == "messagemode" or bind == "messagemode2" then
 		return hook.Run("IsLobbyChatVisible")
