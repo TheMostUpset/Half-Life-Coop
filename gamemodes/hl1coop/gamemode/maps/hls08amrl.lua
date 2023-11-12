@@ -38,15 +38,15 @@ function MAP:ModifyMapEntities()
 	local triggertele = NULL
 	local triggeronce = NULL
 	local triggerchange = NULL
-	for k, v in pairs(ents.FindByName("gotodrag")) do
+	for k, v in ipairs(ents.FindByName("gotodrag")) do
 		v:SetTrigger(false)
 		triggerchange = v
 	end
-	for k, v in pairs(ents.FindByClass("trigger_teleport")) do
+	for k, v in ipairs(ents.FindByClass("trigger_teleport")) do
 		if v:GetName() == "ambush_teleport" then
 			v:Fire("Disable")
 			triggertele = v
-			for _, t in pairs(ents.FindInSphere(v:GetPos(), 16)) do
+			for _, t in ipairs(ents.FindInSphere(v:GetPos(), 16)) do
 				if t:GetClass() == "trigger_once" then
 					t:Fire("Disable")
 					triggeronce = t
@@ -76,7 +76,7 @@ end
 local renameTrain
 function MAP:OnEntCreated(ent)
 	if !renameTrain then
-		for _, trainEnt in pairs(ents.FindByName("crashtrain")) do
+		for _, trainEnt in ipairs(ents.FindByName("crashtrain")) do
 			trainEnt:SetSaveValue("globalname", "pieceofshit3")
 			renameTrain = true
 		end

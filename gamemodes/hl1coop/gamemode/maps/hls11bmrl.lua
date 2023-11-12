@@ -28,11 +28,11 @@ function MAP:ModifyMapEntities()
 	
 	local rem = ents.FindByClass("npc_enemyfinder")
 	table.Add(rem, ents.FindByClass("ai_relationship"))
-	for k, v in pairs(rem) do
+	for k, v in ipairs(rem) do
 		v:Remove()
 	end
 	
-	for k, v in pairs(ents.FindByClass("func_tank*")) do
+	for k, v in ipairs(ents.FindByClass("func_tank*")) do
 		if v:GetName() == "brad_turret" or v:GetName() == "sniper1" or v:GetName() == "sniper2" then
 			local cEnt = ents.Create("func_tank_controller")
 			if IsValid(cEnt) then
