@@ -35,6 +35,9 @@ function MAP:CreateMapEventCheckpoints(ent, activator)
 end
 
 function MAP:FixMapEntities()
+	for k, v in ipairs(ents.FindByClass("trigger_changelevel")) do
+		if v.MapToChange == "hls08amrl" then v.Untouchable = true end
+	end
 	local fTrigPipe = ents.Create("hl1_trigger_func")
 	if IsValid(fTrigPipe) then
 		fTrigPipe.TouchFunction = function(ply)
@@ -64,13 +67,13 @@ local plySpawnPos = plyTelePos - Vector(0, 0, 1)
 
 function MAP:ModifyMapEntities()
 	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then
-		for k, v in pairs(ents.FindByName("wottadrag")) do
+		for k, v in ipairs(ents.FindByName("wottadrag")) do
 			v:Remove()
 		end
-		for k, v in pairs(ents.FindByClass("env_fade")) do
+		for k, v in ipairs(ents.FindByClass("env_fade")) do
 			v:Remove()
 		end
-		for k, v in pairs(ents.FindByName("camera_drag")) do
+		for k, v in ipairs(ents.FindByName("camera_drag")) do
 			if v:GetClass() == "point_viewcontrol" then
 				v:Remove()
 			end
@@ -78,21 +81,21 @@ function MAP:ModifyMapEntities()
 	else
 		if noCutscene then
 			GAMEMODE:CreateCoopSpawnpoints(plySpawnPos, Angle(0, -100, 0))
-			for k, v in pairs(ents.FindByName("camera_drag")) do
+			for k, v in ipairs(ents.FindByName("camera_drag")) do
 				if v:GetClass() == "point_viewcontrol" then
 					v:Remove()
 				end
 			end
-			for k, v in pairs(ents.FindByClass("env_fade")) do
+			for k, v in ipairs(ents.FindByClass("env_fade")) do
 				v:Remove()
-			end		
-			for k, v in pairs(ents.FindByName("block_forblackscreen")) do
+			end
+			for k, v in ipairs(ents.FindByName("block_forblackscreen")) do
 				v:Fire("Kill")
 			end
-			for k, v in pairs(ents.FindByName("compactormm")) do
+			for k, v in ipairs(ents.FindByName("compactormm")) do
 				v:Fire("Trigger")
 			end
-			for k, v in pairs(ents.FindByName("intro_box")) do
+			for k, v in ipairs(ents.FindByName("intro_box")) do
 				v:Fire("Break")
 			end
 		end
@@ -118,7 +121,7 @@ end
 function MAP:OperateMapEvents(ent, input, caller)
 	if !noCutscene and ent:GetClass() == "trigger_teleport" and ent:GetName() == "compactor_teleport" and input == "Enable" and GAMEMODE:IsCoop() then
 		GAMEMODE:CreateCoopSpawnpoints(plySpawnPos, Angle(0, -100, 0))
-		for k, v in pairs(player.GetHumans()) do
+		for k, v in ipairs(player.GetHumans()) do
 			v:SetPos(plyTelePos)
 			v:SetViewEntity()
 			v:Freeze(false)
@@ -145,7 +148,9 @@ function MAP:OnEntCreated(ent)
 end
 
 function MAP:CreateSurvivalEntities()
-	GAMEMODE:CreateWeaponEntity("weapon_healthkit", Vector(-2600, 197, 504), Angle(0, -65, 0))
+	if !GAMEMODE:Get1hpMode() then
+		GAMEMODE:CreateWeaponEntity("weapon_healthkit", Vector(-2600, 197, 504), Angle(0, -65, 0))
+	end
 end
 
 function MAP:OnCheckpoint()
@@ -167,7 +172,7 @@ function MAP:OnMapRestart()
 	if !noCutscene and GAMEMODE:IsCoop() then
 		local camera = ents.FindByName("camera_drag")[1]
 		if IsValid(camera) then
-			for k, v in pairs(player.GetHumans()) do
+			for k, v in ipairs(player.GetHumans()) do
 				v:SetPos(Vector(1362, -1621, 2504))
 				v:Freeze(true)
 				timer.Simple(2, function()
