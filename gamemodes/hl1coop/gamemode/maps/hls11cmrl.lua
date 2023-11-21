@@ -10,7 +10,7 @@ function MAP:CreateViewPoints()
 	GAMEMODE:CreateViewPointEntity(Vector(-42, -765, -170), Angle(25, 120, 0))
 end
 
---local tele1pos = Vector(-310, -260, -300)
+local tele0pos = Vector(-292, -455, -295)
 local tele1pos = Vector(280, -20, -305)
 local tele2pos = Vector(265, 605, -1105)
 local tele3pos = Vector(2060, 2610, -1100)
@@ -27,9 +27,9 @@ MAP.EnvFadeWhitelist = {
 
 function MAP:CreateMapCheckpoints()
 	-- weapon room
-	GAMEMODE:CreateCheckpointTrigger(2, Vector(1955, 3542, -607), Vector(2018, 3594, -496), Vector(1985, 3295, -600), Angle(0, 45, 0), {tele1pos, tele2pos, tele3pos}, "weapon_hornetgun")
+	GAMEMODE:CreateCheckpointTrigger(2, Vector(1955, 3542, -607), Vector(2018, 3594, -496), Vector(1985, 3295, -600), Angle(0, 45, 0), {tele0pos, tele1pos, tele2pos, tele3pos}, "weapon_hornetgun")
 	-- snark vent
-	GAMEMODE:CreateCheckpointTrigger(3, Vector(245, -989, -413), Vector(237, -917, -355), Vector(520, -1960, -420), Angle(0, 90, 0), {tele1pos, tele2pos, tele3pos, tele4pos}, "weapon_hornetgun", snark_func)
+	GAMEMODE:CreateCheckpointTrigger(3, Vector(245, -989, -413), Vector(237, -917, -355), Vector(520, -1960, -420), Angle(0, 90, 0), {tele0pos, tele1pos, tele2pos, tele3pos, tele4pos}, "weapon_hornetgun", snark_func)
 end
 
 local rocketsPassed
@@ -41,6 +41,7 @@ local function CreateWeaponBlock()
 	local blockWeapons = ents.Create("hl1_trigger_func")
 	if IsValid(blockWeapons) then
 		function blockWeapons:Touch(ent)
+			-- probably it can remove func_door lift as well, need to recheck
 			if !ent:IsPlayer() then
 				ent:Remove()
 			end
@@ -52,19 +53,28 @@ end
 
 function MAP:CreateMapEventCheckpoints(ent, activator)
 	if ent:GetName() == "chase_mm" then
-		if !rocketsPassed then
-			GAMEMODE:RemoveCoopSpawnpoints()
-			GAMEMODE:Checkpoint(1, rocketsPassedPos, rocketsPassedAng, tele1pos, activator)
-			GAMEMODE:CreateCoopSpawnpoints(rocketsPassedPos, rocketsPassedAng)
-			CreateWeaponBlock()
-			rocketsPassed = true
+		if game.SinglePlayer() then
+			GAMEMODE:Checkpoint(1, rocketsPassedPos, rocketsPassedAng, {tele0pos, tele1pos}, activator)
+			for k, v in ipairs(ents.FindInBox(Vector(-389, -561, -118), Vector(769, 731, -452))) do
+				if v:GetClass() == "monster_headcrab" then
+					v:Remove()
+				end
+			end
+		else
+			if !rocketsPassed then
+				GAMEMODE:RemoveCoopSpawnpoints()
+				GAMEMODE:Checkpoint(1, rocketsPassedPos, rocketsPassedAng, {tele0pos, tele1pos}, activator)
+				GAMEMODE:CreateCoopSpawnpoints(rocketsPassedPos, rocketsPassedAng)
+				CreateWeaponBlock()
+				rocketsPassed = true
+			end
 		end
 	end
 	if ent:GetName() == "bustmm" then
-		GAMEMODE:Checkpoint(4, Vector(2990, -2946, -440), Angle(0,180,0), {tele1pos, tele2pos, tele3pos, tele4pos, tele5pos}, activator, "weapon_hornetgun")
+		GAMEMODE:Checkpoint(4, Vector(2990, -2946, -440), Angle(0,180,0), {tele0pos, tele1pos, tele2pos, tele3pos, tele4pos, tele5pos}, activator, "weapon_hornetgun")
 	end
 	if ent:GetName() == "radio1" then
-		GAMEMODE:Checkpoint(5, Vector(-1290, 1350, -350), Angle(0,180,0), {tele1pos, tele2pos, tele3pos, tele4pos, tele5pos, tele6pos}, activator, "weapon_hornetgun")
+		GAMEMODE:Checkpoint(5, Vector(-1290, 1350, -350), Angle(0,180,0), {tele0pos, tele1pos, tele2pos, tele3pos, tele4pos, tele5pos, tele6pos}, activator, "weapon_hornetgun")
 	end
 end
 
@@ -86,13 +96,13 @@ end)
 
 local tank_breakable
 function MAP:FixMapEntities()
-	for k, v in pairs(ents.FindByClass("func_breakable")) do
+	for k, v in ipairs(ents.FindByClass("func_breakable")) do
 		if v:GetPos() == Vector(3307,4399,-788) then
 			tank_breakable = v
 			tank_breakable:SetSaveValue("m_takedamage", 0)
 		end
 	end	
-	for k, v in pairs(ents.FindByClass("ambient_generic")) do
+	for k, v in ipairs(ents.FindByClass("ambient_generic")) do
 		if v:GetName() == "brad_break_shakea" then
 			v:SetSaveValue("message", "weapons/mortarhit.wav")
 		end
@@ -116,7 +126,7 @@ end
 
 local function OspreyGruntCount()
 	local count = 0
-	for k, v in pairs(ents.FindByClass("monster_human_grunt")) do
+	for k, v in ipairs(ents.FindByClass("monster_human_grunt")) do
 		local owner = v:GetOwner()
 		if IsValid(owner) and owner:GetClass() == "monster_osprey" then
 			count = count + 1
@@ -263,14 +273,14 @@ function MAP:ModifyMapEntities()
 	end
 	
 	-- sets the name for tank so it can be detected in EntityTakeDamage hook
-	for k, v in pairs(ents.FindByName("tank_health")) do
+	for k, v in ipairs(ents.FindByName("tank_health")) do
 		if v:GetClass() == "func_breakable" then
 			v:SetName("tank_break_explob")
 		end
 	end
 	
 	-- we dont need this in coop
-	for k, v in pairs(ents.FindByClass("scripted_sequence")) do
+	for k, v in ipairs(ents.FindByClass("scripted_sequence")) do
 		if v:GetName() == "watchout" or v:GetName() == "watchoutforthedoorsbarney" then
 			v:Remove()
 		end
@@ -281,7 +291,7 @@ function MAP:ModifyMapEntities()
 	for k, v in pairs(rem) do
 		v:Remove()
 	end
-	for k, v in pairs(ents.FindByName("sniper1")) do
+	for k, v in ipairs(ents.FindByName("sniper1")) do
 		if v:GetClass() == "func_tank" then
 			local cEnt = ents.Create("func_tank_controller")
 			if IsValid(cEnt) then
@@ -294,7 +304,7 @@ function MAP:ModifyMapEntities()
 end
 
 function SkipTripmines()
-	if rocketsPassed then return end
+	if rocketsPassed or game.SinglePlayer() then return end
 	rocketsPassed = true
 	GAMEMODE:GameRestart()
 end
