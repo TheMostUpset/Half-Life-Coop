@@ -54,7 +54,7 @@ function MAP:ModifyMapEntities()
 			end
 		end
 	end
-	local mins, maxs = Vector(-5483, -18, 240), Vector(-5811, 476, 456)
+	local mins, maxs = Vector(-5492, -18, 240), Vector(-5811, 476, 456)
 	local func = function()
 		if IsValid(triggeronce) then triggeronce:Fire("Enable") end
 		if IsValid(triggertele) then triggertele:Fire("Enable") end
@@ -67,6 +67,7 @@ function MAP:ModifyMapEntities()
 		fTrig.TouchFunction = function(ply)
 			ply:ScreenFade(SCREENFADE.IN, color_black, 1, 15)
 			ply:Freeze(true)
+			ply:StripWeapons()
 		end
 		fTrig:Spawn()
 		fTrig:SetCollisionBoundsWS(Vector(-5861, 412, 220), Vector(-6148, 61, 426))
