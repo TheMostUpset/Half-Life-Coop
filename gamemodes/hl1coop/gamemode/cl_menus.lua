@@ -189,6 +189,10 @@ function GM:AdminSettingsTable()
 	return adminsettingscvars
 end
 
+local function CanPlayerUseRestrictedSettings(ply)
+	return ply:IsAdmin()
+end
+
 local sndMenu1 = Sound("common/launch_upmenu1.wav")
 local sndMenu2 = Sound("common/launch_glow1.wav")
 local sndMenu3 = Sound("common/launch_select2.wav")
@@ -1206,7 +1210,7 @@ function GM:OpenSWEPMenu()
 		return
 	end
 	
-	if !LocalPlayer():IsAdmin() then return end
+	if !CanPlayerUseRestrictedSettings(LocalPlayer()) then return end
 	
 	self.SWEPMenu = vgui.Create("DPanel")
 	local menu = self.SWEPMenu
@@ -1417,7 +1421,7 @@ function GM:OpenMainMenu()
 		
 		for k, v in pairs(menu) do
 			local invisible
-			if v.adminonly and !LocalPlayer():IsAdmin() then
+			if v.adminonly and !CanPlayerUseRestrictedSettings(LocalPlayer()) then
 				invisible = true
 			end
 			local namefunc = v[3]
@@ -2190,7 +2194,7 @@ function GM:ModelSelectionMenu()
 end
 
 local function RunServerCommand(cvar, args)
-	if !LocalPlayer():IsSuperAdmin() then return end
+	if !CanPlayerUseRestrictedSettings(LocalPlayer()) then return end
 	net.Start("RunServerCommand")
 	net.WriteString(cvar)
 	if args then
@@ -2200,7 +2204,7 @@ local function RunServerCommand(cvar, args)
 end
 
 function GM:OpenServerSettings()
-	if !LocalPlayer():IsSuperAdmin() then return end
+	if !CanPlayerUseRestrictedSettings(LocalPlayer()) then return end
 	self.Menu.adminSettings = vgui.Create("DPanel")
 	local plySettings = self.Menu.adminSettings
 	plySettings:SetSize(math.max(ScrW() / 3, 400), ScrH() / 1.65 + 200)
