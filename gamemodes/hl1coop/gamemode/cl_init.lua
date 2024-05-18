@@ -118,6 +118,7 @@ function ConvertToLang(msg)
 	return str
 end
 
+local cvar_debug_cl = CreateClientConVar("_hl1coop_debug_client", 0, false, false, "Print clientside debug info in console", 0, 1)
 CreateClientConVar("hl1_coop_cl_autoswitch", 1, true, true, "Enable weapon autoswitch on pickup", 0, 1)
 CreateClientConVar("hl1_coop_cl_playermodel", "Helmet (HLS)", true, true, "Player model")
 CreateClientConVar("hl1_coop_cl_playercolor", "", true, true, "Player model color")
@@ -157,6 +158,12 @@ net.Receive("SetLongJumpClient", function()
 		end)
 	end
 end)]]
+
+function debugPrintClient(...)
+	if cvar_debug_cl:GetBool() then
+		print(...)
+	end
+end
 
 net.Receive("SetGlobalBoolFix", function()
 	SetGlobalBool(net.ReadString(), net.ReadBool())
