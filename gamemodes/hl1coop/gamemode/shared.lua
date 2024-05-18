@@ -50,16 +50,17 @@ end)
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.7"
+GM.Version = "1.7 beta"
 GM.Cooperative = true
 GM.Changelog = [[- Added 1 HP mode
 - Added German language (thanks to Christian Maubach)
+- Added bunch of subtitles for regular sentences
 - Added player nickname on their weaponbox
-- Added support for custom lang files
+- Added ability to respawn for score in survival mode
 - Added hl1_coop_sv_transparentplayers convar
 - Added hl1coop_npcrepl_ichthyosaur convar
-- Added ability to respawn for score in survival mode
 - Added Break input and OnBreak output on func_pushable
+- Added support for custom lang files
 - Reimagined lobby menu
 - Prices for respawn options moved to hl1_coop_price_* convars
 - F1-F4 keys do not rely on default gmod binds anymore
@@ -67,6 +68,7 @@ GM.Changelog = [[- Added 1 HP mode
 - Fixed taking falldamage at the beginning of hls09
 - Fixed Gonarch spit always hitting trigger_gravity on hls14a
 - Fixed not giving score for damaging Gonarch with shotgun
+- Fixed extra weapons not saving through levels
 - Fixed NPCs being invisible in Crack Mode
 - Minor fixes]]
 
@@ -661,9 +663,9 @@ end
 
 local lastMusicEnt
 function GM:EntityEmitSound(t)
+	local name = t.OriginalSoundName
 	if SERVER then
 		local ent = t.Entity
-		local name = t.OriginalSoundName
 		if IsValid(ent) and ent:GetClass() == "ambient_generic" then
 			if string.StartWith(name, "HL1_Music") or string.StartWith(name, "song_hl1_") then
 				if !IsValid(lastMusicEnt) or lastMusicEnt != ent then
@@ -675,11 +677,17 @@ function GM:EntityEmitSound(t)
 		end
 
 		if ent:IsNPC() then
-			hook.Run("SendCaption", name, ent:GetPos())
+			local isSentence = ent:Health() > 0 and t.SoundName == "invalid.wav"
+			hook.Run("SendCaption", name, ent:WorldSpaceCenter(), isSentence)
 		end
 		
 		if t.SoundName == "items/ammo_pickup.wav" then
 			t.SoundName = "items/gunpickup2.wav"
+			return true
+		end
+	else
+		if name == "BaseExplosionEffect.Sound" then
+			t.SoundName = string.gsub(t.SoundName, "weapons/", "hl1/weapons/")
 			return true
 		end
 	end
@@ -898,6 +906,23 @@ function GetHL1WeaponClassTable()
 		"weapon_snark"
 	}
 	return weps
+end
+
+function GetHL1AmmoEntTable()
+	local ammo = {
+		"ammo_9mmar",
+		"ammo_9mmclip",
+		"ammo_357",
+		"ammo_argrenades",
+		"ammo_buckshot",
+		"ammo_crossbow",
+		"ammo_gaussclip",
+		"ammo_glockclip",
+		"ammo_mp5clip",
+		"ammo_mp5grenades",
+		"ammo_rpgclip"		
+	}
+	return ammo
 end
 
 function GetHL1WeaponClassTable_Alt()

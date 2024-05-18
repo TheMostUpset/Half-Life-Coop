@@ -70,7 +70,8 @@ for wep, icon in pairs(killics) do
 end
 
 local cvar_showhints = CreateClientConVar("hl1_coop_cl_showhints", 1, true, false, "Enable hints for noobs", 0, 1)
-local cvar_showscore = CreateClientConVar("hl1_coop_cl_showscore", 1, true, false, "Show score points popup")
+local cvar_showscore = CreateClientConVar("hl1_coop_cl_showscore", 1, true, false, "Show score points popup", 0, 1)
+local cvar_lobbyblur = CreateClientConVar("hl1_coop_cl_lobbyblur", 1, true, false, "Draw blur background in lobby", 0, 1)
 local ScreenMessageScore
 local ScreenMessageScoreText
 local ScreenMessageScore_time = RealTime()
@@ -184,22 +185,25 @@ local lineCountS = 0
 local caption_h_lerp = 0
 function GM:ShowCaption(sentence)
 	if !cvar_subtitles:GetBool() or !lang then return end
+	local startwith = string.StartsWith
+	if startwith(sentence, "!") then
+		sentence = string.TrimLeft(sentence, "!")
+	end
 	local text = lang.subtitleTable[sentence]
 	if text then
 		local caption_color = {140, 140, 140}
 		local caption_time = RealTime() + utf8.len(text) / 20 + 2.5
 		local typeSentence = string.upper(sentence)
-		local startwith = string.StartWith
-		if startwith(typeSentence, "!SC_") or startwith(sentence, "NPC_Scientist") then
+		if startwith(typeSentence, "SC_") or startwith(sentence, "NPC_Scientist") then
 			caption_color = {240, 240, 240}
-		elseif startwith(typeSentence, "!BA_") then
+		elseif startwith(typeSentence, "BA_") then
 			caption_color = {160, 200, 255}
-		elseif startwith(typeSentence, "!HG_") then
+		elseif startwith(typeSentence, "HG_") then
 			caption_color = {180, 255, 200}
-		elseif startwith(typeSentence, "!GM_") then
+		elseif startwith(typeSentence, "GM_") then
 			caption_color = {255, 200, 255}
 			caption_time = RealTime() + utf8.len(text) / 14 + 2.5
-		elseif startwith(typeSentence, "!BMAS_") then
+		elseif startwith(typeSentence, "BMAS_") then
 			caption_color = {40, 120, 200}
 			caption_time = RealTime() + utf8.len(text) / 14 + 3.5
 		elseif startwith(sentence, "nihilanth/") then
@@ -208,7 +212,7 @@ function GM:ShowCaption(sentence)
 		elseif startwith(sentence, "tride/") then
 			caption_color = {255, 200, 30}
 			caption_time = RealTime() + utf8.len(text) / 12
-		elseif startwith(typeSentence, "!HOLO_") or startwith(sentence, "holo/") then
+		elseif startwith(typeSentence, "HOLO_") or startwith(sentence, "holo/") then
 			caption_color = {210, 180, 80}
 		end
 		
@@ -227,6 +231,8 @@ function GM:ShowCaption(sentence)
 		end
 
 		table.insert(caption_text, {caption_table, caption_time, RealTime(), caption_color, ctext_h, caption_w, caption_h, lineCountS})
+	else
+		debugPrintClient("Missing caption for "..sentence)
 	end
 end
 net.Receive("ShowCaption", function()
@@ -1196,6 +1202,7 @@ function GM:HUDDrawWaitTimer()
 end
 
 local lobbyBackground = Material("vgui/gradient-d")
+local lobbyBackgroundBlur = Material("pp/blurscreen")
 function GM:HUDPaint()
 	local ply = LocalPlayer()
 	
@@ -1293,8 +1300,18 @@ function GM:HUDPaint()
 	hook.Run("HUDDrawWaitTimer")
 	
 	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then
+		if cvar_lobbyblur:GetBool() then
+			surface.SetMaterial(lobbyBackgroundBlur)
+			surface.SetDrawColor(255, 255, 255, 255)
+			for i = 1, 3 do
+				lobbyBackgroundBlur:SetFloat( "$blur", i * 3 )
+				lobbyBackgroundBlur:Recompute()
+				render.UpdateScreenEffectTexture()
+				surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+			end
+		end		
 		surface.SetMaterial(lobbyBackground)
-		surface.SetDrawColor(25, 15, 0, 210)
+		surface.SetDrawColor(25, 15, 0, 200)
 		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
 		-- hook.Run("HUDDrawChangelog")
 	end

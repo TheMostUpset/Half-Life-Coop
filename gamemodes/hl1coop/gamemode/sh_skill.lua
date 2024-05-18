@@ -428,6 +428,7 @@ function GM:SetSkillLevel(num)
 	end)
 	
 	hook.Run("OnSkillLevelChange", num, skillOld)
+	CallMapHook("OnSkillLevelChange", num)
 end
 
 cvars.AddChangeCallback("hl1_coop_sv_skill", function(name, value_old, value_new)

@@ -79,20 +79,39 @@ function MAP:CreateMapEventCheckpoints(ent, activator)
 end
 
 local function FixCrates()
+	local found = false
 	for k, v in ipairs(ents.FindInBox(Vector(2721, -3198, -736), Vector(2464, -3012, -577))) do
 		if v:GetClass() == "func_breakable" then
+			v.defaultSpawnFlags = v:GetSpawnFlags()
 			v:SetSaveValue("m_takedamage", 0)
 			v:SetKeyValue("spawnflags", 0)
+			found = true
+		end
+		if v:GetClass() == "prop_physics" then -- the white box we created
+			found = true
 		end
 	end
+	return found
 end
 
 hook.Add("Modify1hpModeEntities", "1hpFixCrates", FixCrates)
-hook.Add("OnSkillLevelChange", "FixCrates", function(skill)
+function MAP:OnSkillLevelChange(skill)
 	if skill > 3 then
-		FixCrates()
+		if !FixCrates() then
+			GAMEMODE:CreateMapDecoration("models/hunter/blocks/cube2x2x2.mdl", Vector(2578,-3088,-688))
+		end
+	else
+		for k, v in ipairs(ents.FindInBox(Vector(2721, -3198, -736), Vector(2464, -3012, -577))) do
+			if v:GetClass() == "func_breakable" and v.defaultSpawnFlags then
+				v:SetSaveValue("m_takedamage", 2)
+				v:SetKeyValue("spawnflags", v.defaultSpawnFlags)
+			end
+			if v:GetClass() == "prop_physics" then
+				v:Remove()
+			end
+		end
 	end
-end)
+end
 
 local tank_breakable
 function MAP:FixMapEntities()
@@ -106,6 +125,9 @@ function MAP:FixMapEntities()
 		if v:GetName() == "brad_break_shakea" then
 			v:SetSaveValue("message", "weapons/mortarhit.wav")
 		end
+	end
+	if GAMEMODE:GetSkillLevel() > 3 then
+		FixCrates()
 	end
 end
 

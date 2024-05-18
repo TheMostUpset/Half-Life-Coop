@@ -24,6 +24,8 @@ MAP.FallToDeath = {
 	{Vector(4672, 5231, -3824), Vector(5472, 6191, -3790)} -- crates
 }
 
+local MinSkillForMovableCrates = 3 -- crates will be frozen below this skill level
+
 function MAP:CreateViewPoints()
 	GAMEMODE:CreateViewPointEntity(Vector(-1655, 542, -1582), Angle(0, 90, 0))
 end
@@ -162,7 +164,7 @@ function MAP:FixMapEntities()
 			local phys = v:GetPhysicsObject()
 			if IsValid(phys) then
 				phys:AddGameFlag(FVPHYSICS_NO_IMPACT_DMG)
-				if GAMEMODE:GetSkillLevel() <= 1 then
+				if GAMEMODE:GetSkillLevel() < MinSkillForMovableCrates then
 					phys:EnableMotion(false)
 				end
 			end
@@ -246,6 +248,21 @@ end
 function MAP:OnCheckpoint(cpNum)
 	if cpNum > 1 then
 		self.StartingWeaponsSurvival = "weapon_crowbar"
+	end
+end
+
+function MAP:OnSkillLevelChange(skill)
+	for k, v in ipairs(ents.FindByName("crate*")) do
+		if v:GetClass() == "func_physbox" then
+			local phys = v:GetPhysicsObject()
+			if IsValid(phys) then
+				if skill < MinSkillForMovableCrates then
+					phys:EnableMotion(false)
+				else
+					phys:EnableMotion(true)
+				end
+			end
+		end
 	end
 end
 

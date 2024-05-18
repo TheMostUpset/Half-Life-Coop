@@ -65,7 +65,10 @@ function meta:IsStuck()
 		["func_tank"] = true,
 		["func_tankmortar"] = true,
 		["func_rotating"] = true,
-		["hl1_playerclip"] = true
+		["hl1_playerclip"] = true,
+		["hl1_prop_static"] = true,
+		["hl1_prop_breakable"] = true,
+		["prop_physics"] = true
 	}
 	--print(tr.Hit, tr.Entity, tr.HitWorld, self:OnGround())
 	return tr.HitWorld or (IsValid(tr.Entity) and (worldEntities[tr.Entity:GetClass()] or tr.Entity:IsNPC()))
@@ -242,7 +245,8 @@ function meta:SetSuitUpdate(name, iNoRepeatTime, ignorecvar, customDuration)
 		if IsValid(self) then
 			local plyIndex = self:EntIndex()
 			if self:Alive() and self:IsSuitEquipped() then
-				EmitSentence(name, self:GetPos(), plyIndex, CHAN_VOICE, vol, sndlvl, 0, 100 * pitchMul)
+				-- the channel used to be CHAN_VOICE but after some gmod updates sentences started to cut each other
+				EmitSentence(name, self:GetPos(), plyIndex, CHAN_AUTO, vol, sndlvl, 0, 100 * pitchMul)
 			else
 				self:ClearSuitMessages()
 			end

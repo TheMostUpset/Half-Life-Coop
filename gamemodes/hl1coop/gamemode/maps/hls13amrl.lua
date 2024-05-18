@@ -27,16 +27,16 @@ function MAP:ModifyMapEntities()
 	GAMEMODE:CreateWeaponEntity("weapon_mp5", Vector(1891, 2498, 1230), Angle(0, 30, 0))
 	GAMEMODE:CreateWeaponEntity("weapon_shotgun", Vector(1744, 1160, 800), Angle(0, -105, 0))
 	
-	for k, v in pairs(ents.FindByName("c3a2d_door3")) do
+	for k, v in ipairs(ents.FindByName("c3a2d_door3")) do
 		v:SetNotSolid(true)
 		v:SetNoDraw(true)
 	end
 	
-	for _, ent in pairs(ents.FindByClass("trigger_changelevel")) do
+	for _, ent in ipairs(ents.FindByClass("trigger_changelevel")) do
 		ent.FadeEffect = true -- saving your eyes
 	end
 	
-	for k, v in pairs(ents.FindInBox(Vector(3962, 1008, 2568), Vector(3662, 1200, 2442))) do
+	for k, v in ipairs(ents.FindInBox(Vector(3962, 1008, 2568), Vector(3662, 1200, 2442))) do
 		if v:IsPickupItem() then
 			v.RespawnTime = 1
 		end
@@ -96,11 +96,12 @@ function MAP:OperateMapEvents(ent, input, caller, activator)
 			if IsValid(sEnt) and sEnt:Health() > 0 then
 				timer.Simple(0.05, function()
 					if IsValid(sEnt) then
-						sEnt:PlaySentence(sentence, 0, .1) -- 'stops' current
+						-- stopping sentence and replaying it 'globally' so we can change sound level
+						sEnt:SentenceStop()
+						local sentence = string.Replace(sentence, "!", "")
+						EmitSentence(sentence, sEnt:GetPos(), sEnt:EntIndex(), CHAN_VOICE, 1, 95)
 					end
 				end)
-				local sentence = string.Replace(sentence, "!", "")
-				EmitSentence(sentence, sEnt:GetPos(), sEnt:EntIndex(), CHAN_VOICE, 1, 95)
 			end
 		end
 	end

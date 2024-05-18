@@ -243,7 +243,7 @@ net.Receive("SetPlayerModelColor", function(len, ply)
 	end
 end)
 
-local cvar_debug = CreateConVar("_hl1coop_debug", 0, FCVAR_ARCHIVE, "Print debug info in console", 0, 1)
+local cvar_debug = CreateConVar("_hl1coop_debug", 0, FCVAR_ARCHIVE, "Print serverside debug info in console", 0, 1)
 --CreateConVar("hl1_coop_limitedrespawns", 1, FCVAR_NOTIFY, "Limited continues")
 local cvar_speedrun = CreateConVar("hl1_coop_mode_speedrun", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
 local cvar_survival = CreateConVar("hl1_coop_mode_survival", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, nil, 0, 1)
@@ -575,7 +575,7 @@ function GM:InitPostEntity(restart)
 		CallMapHook("CreateSurvivalEntities")
 	end
 	
-	if game.SinglePlayer() then
+	if game.SinglePlayer() and !restart then
 		if cvar_speedrun:GetBool() and !self:GetSpeedrunMode() then
 			self:SetSpeedrunMode(true, 2)
 		end
@@ -915,10 +915,10 @@ function GM:PlayerHasFinishedMap(ply)
 	end
 end
 
-function GM:SendCaption(sentence, pos)
+function GM:SendCaption(sentence, pos, isSentence)
 	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD then return end
-	local startWith = string.StartWith
-	if startWith(sentence, "!") or startWith(sentence, "NPC_Scientist") or startWith(sentence, "tride/") or startWith(sentence, "barney/") or startWith(sentence, "scientist/") or startWith(sentence, "hgrunt/") or startWith(sentence, "nihilanth/") or startWith(sentence, "holo/") then
+	local startWith = string.StartsWith
+	if isSentence or startWith(sentence, "!") or startWith(sentence, "NPC_Scientist") or startWith(sentence, "tride/") or startWith(sentence, "barney/") or startWith(sentence, "scientist/") or startWith(sentence, "hgrunt/") or startWith(sentence, "nihilanth/") or startWith(sentence, "holo/") then
 		net.Start("ShowCaption")
 		net.WriteString(sentence)
 		if pos == true then
@@ -945,7 +945,13 @@ function GM:AcceptInput(ent, input, activator, caller, value)
 		--print(message, ent, ent:GetName())
 		hook.Run("SendCaption", message, pos)
 	end
-	if ent:GetClass() == "scripted_sentence" and input == "BeginSentence" then
+	if game.SinglePlayer() and ent:GetClass() == "player_weaponstrip" and input == "Strip" then
+		local ply = Entity(1)
+		if IsValid(ply) and ply:IsPlayer() then
+			ply:StripWeapons()
+		end
+	end
+	--[[if ent:GetClass() == "scripted_sentence" and input == "BeginSentence" then
 		local active = ent:GetSaveTable().m_active
 		if active then
 			local sndpos = ent:GetPos()
@@ -964,12 +970,12 @@ function GM:AcceptInput(ent, input, activator, caller, value)
 					EmitSentence(sentenceName, v:GetPos(), v:EntIndex(), CHAN_VOICE, .3, 0, 0, 100)
 				end
 				sentence = "!BMAS_"..sentenceName
-			end]]--
-			if active then
+			end]]
+			--[[if active then
 				hook.Run("SendCaption", sentence, sndpos)
 			end
 		end
-	end
+	end]]
 	if self:GetCrackMode() then
 		hook.Run("CrackModeAcceptInput", ent, input, caller, activator)
 	end
@@ -1062,20 +1068,21 @@ function GM:PlayerInitialSpawn(ply)
 					if v.alive then
 						timer.Simple(.1, function()
 							if IsValid(ply) then
-								if v.weptable then
+								if MAP.StartingWeapons != false and v.weptable then
 									for wepclass, w in pairs(v.weptable) do
-										if ply:HasWeapon(wepclass) then
-											if w.ammotype then
-												ply:SetAmmo(w.ammocount, w.ammotype)
-											end
-											if w.ammotypeS then
-												ply:SetAmmo(w.ammocountS, w.ammotypeS)
-											end
-											if w.clip then
-												local weapon = ply:GetWeapon(wepclass)
-												if IsValid(weapon) then
-													weapon:SetClip1(w.clip)
-												end
+										if !ply:HasWeapon(wepclass) then
+											ply:Give(wepclass, true)
+										end
+										if w.ammotype then
+											ply:SetAmmo(w.ammocount, w.ammotype)
+										end
+										if w.ammotypeS then
+											ply:SetAmmo(w.ammocountS, w.ammotypeS)
+										end
+										if w.clip then
+											local weapon = ply:GetWeapon(wepclass)
+											if IsValid(weapon) then
+												weapon:SetClip1(w.clip)
 											end
 										end
 									end
@@ -1191,7 +1198,7 @@ function GM:PlayerSpawn(ply)
 	
 	CallMapHook("OnPlayerSpawn", ply)
 	
-	if !ply.FirstSpawn and !self:GetSurvivalMode() then
+	if !ply.FirstSpawn then
 		ply:SetSpawnProtectionTime(SPAWN_PROTECTION_TIME)
 	end
 	ply.FirstSpawn = false
@@ -1541,14 +1548,14 @@ function GM:Modify1hpModeEntities()
 	for _, ent in ipairs(items) do
 		ent:Remove()
 	end
-	local weapons = GetHL1WeaponClassTable()
+	local replaceTable = GetHL1AmmoEntTable()
 	local crates = ents.FindByClass("func_breakable")
 	table.Add(crates, ents.FindByClass("func_pushable"))
 	table.Add(crates, ents.FindByClass("func_physbox"))
 	for _, ent in ipairs(crates) do
 		local spawnObj = ent:GetClass() == "func_pushable" and ent.spawnobject or ent:GetSaveTable().m_iszSpawnObject
 		if spawnObj == "item_battery" or spawnObj == "item_healthkit" then
-			local repl = weapons[math.random(1, #weapons)]
+			local repl = replaceTable[math.random(1, #replaceTable)]
 			if repl then
 				if ent:GetClass() == "func_pushable" then
 					ent.spawnobject = repl
@@ -1696,7 +1703,7 @@ function GM:Think()
 		if self:GetActivePlayersNumber(true) > 0 then
 			self:SetGlobalBool("SurvivalMode", true)
 			PrintMessage(HUD_PRINTTALK, "Survival mode is enabled!")
-			for k, v in pairs(team.GetPlayers(TEAM_COOP)) do
+			for k, v in ipairs(team.GetPlayers(TEAM_COOP)) do
 				if v:Alive() then
 					v:GiveMedkit()
 				end
@@ -2104,7 +2111,7 @@ function GM:StorePlayerAmmunitionNew(ply)
 	local weptable = ply:GetWeapons()
 	if weptable then
 		local weapons = {}
-		for k, v in pairs(weptable) do
+		for k, v in ipairs(weptable) do
 			local clip = v:Clip1()
 			clip = clip > -1 and clip or nil
 			local ammotype = v:GetPrimaryAmmoType()
@@ -3275,3 +3282,162 @@ cvars.AddChangeCallback("hl1_coop_sv_friendlyfire", function(name, value_old, va
 		end
 	end
 end, "HL1Coop_FriendlyFire_Callback")
+
+function GM:CreatePhysicsDecoration(model, pos, ang, mat, skin)
+	ang = ang or Angle()
+	local ent = ents.Create("prop_physics")
+	if IsValid(ent) then
+		ent:SetModel(model)
+		ent:SetPos(pos)
+		ent:SetAngles(ang)
+		if skin then
+			ent:SetSkin(skin)
+		end
+		ent:Spawn()
+		if mat then
+			ent:SetMaterial(mat)
+		end
+	end
+end
+
+function GM:CreateBreakableDecoration(model, pos, ang, health, spawnent, mat, scale, noshadow, skin, nodraw, nonsolid)
+	ang = ang or Angle()
+	health = health or 100
+	local ent = ents.Create("hl1_prop_breakable")
+	if IsValid(ent) then
+		ent:SetModel(model)
+		ent:SetPos(pos)
+		ent:SetAngles(ang)
+		ent:SetHealth(health)
+		if spawnent then
+			ent.spawnobject = spawnent
+		end
+		if scale then
+			ent:SetModelScale(scale)
+		end
+		if noshadow then
+			ent:DrawShadow(false)
+		end
+		if skin then
+			ent:SetSkin(skin)
+		end
+		if nodraw then
+			ent:SetNoDraw(true)
+		end
+		ent:Spawn()
+		if mat then
+			ent:SetMaterial(mat)
+		end
+		if nonsolid then
+			ent:SetNotSolid(true)
+		end
+		
+		return ent
+	end
+end
+
+function GM:CreateStaticDecoration(model, pos, ang, mat, scale, noshadow, skin, nodraw, nonsolid, color)
+	ang = ang or Angle()
+	local ent = ents.Create("hl1_prop_static")
+	if IsValid(ent) then
+		ent:SetModel(model)
+		ent:SetPos(pos)
+		ent:SetAngles(ang)
+		if scale then
+			ent:SetModelScale(scale)
+		end
+		if noshadow then
+			ent:DrawShadow(false)
+		end
+		if skin then
+			ent:SetSkin(skin)
+		end
+		if nodraw then
+			ent:SetNoDraw(true)
+		end
+		ent:Spawn()
+		if scale then
+			ent:Activate()
+		end
+		if mat then
+			ent:SetMaterial(mat)
+		end
+		if nonsolid then
+			ent:SetNotSolid(true)
+		end
+		if color then
+			ent:SetColor(color)
+		end
+		
+		return ent
+	end
+end
+
+function GM:CreateMapDecoration(model, pos, ang, mat, scale, noshadow, nophys, skin, nodraw)
+	ang = ang or Angle()
+	local ent = ents.Create("prop_physics")
+	if IsValid(ent) then
+		ent:SetModel(model)
+		ent:SetPos(pos)
+		ent:SetAngles(ang)
+		if scale then
+			ent:SetModelScale(scale)
+		end
+		if noshadow then
+			ent:DrawShadow(false)
+		end
+		if skin then
+			ent:SetSkin(skin)
+		end
+		if nodraw then
+			ent:SetNoDraw(true)
+		end
+		ent:Spawn()
+		if scale then
+			ent:Activate()
+		end
+		if nophys then
+			ent:PhysicsDestroy()
+		else
+			local phys = ent:GetPhysicsObject()
+			if phys:IsValid() then
+				phys:Sleep()
+				phys:EnableMotion(false)
+			end
+		end
+		if mat then
+			ent:SetMaterial(mat)
+		end
+		
+		return ent
+	end
+end
+
+function GM:CreateHologramDecoration(model, pos, ang, mat, scale, skin)
+	ang = ang or Angle()
+	local ent = ents.Create("hl1_prop_static")
+	if IsValid(ent) then
+		ent:SetModel(model)
+		ent:SetPos(pos)
+		ent:SetAngles(ang)
+		ent:DrawShadow(false)
+		if scale then
+			ent:SetModelScale(scale)
+		end
+		if skin then
+			ent:SetSkin(skin)
+		end
+		if nodraw then
+			ent:SetNoDraw(true)
+		end
+		ent:Spawn()
+		ent:SetNotSolid(true)
+		if mat then
+			ent:SetMaterial(mat)
+		end
+		ent:SetRenderMode(RENDERMODE_TRANSCOLOR)
+		ent:SetRenderFX(kRenderFxDistort)
+		
+		return ent
+	end
+end
