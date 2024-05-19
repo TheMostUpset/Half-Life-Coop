@@ -115,6 +115,7 @@ lang.adminmenu_gainnpchealth = "Здоровье NPC зависит от кол-
 lang.adminmenu_givemedkit = "Давать аптечку вне survival mode"
 lang.adminmenu_speedrunmode = "Speedrun mode (включение перезапускает карту)"
 lang.adminmenu_survivalmode = "Survival mode"
+lang.adminmenu_1hpmode = "1 HP mode (выключение перезапускает карту)"
 lang.adminmenu_crackmode = "Crack mode (не надо)"
 lang.adminmenu_skilllevel = "Уровень сложности"
 lang.adminmenu_wepscreenshake = "Тряска экрана при взрывах"
