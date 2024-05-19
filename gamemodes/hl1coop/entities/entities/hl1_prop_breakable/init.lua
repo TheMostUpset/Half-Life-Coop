@@ -116,6 +116,7 @@ function ENT:Die()
 		local dropEnt = ents.Create(self.spawnobject)
 		if IsValid(dropEnt) then
 			dropEnt:SetPos(self:GetPos())
+			dropEnt:SetSolid(SOLID_BSP)
 			dropEnt:Spawn()
 		end
 	end
