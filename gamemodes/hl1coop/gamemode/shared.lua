@@ -700,8 +700,8 @@ end
 local entUseBlacklist = {
 	["gib"] = true,
 	["hl1_playerclip"] = true,
-	["hl1_inf_breakable"] = true,
-	["hl1_inf_prop_static"] = true
+	["hl1_prop_breakable"] = true,
+	["hl1_prop_static"] = true
 }
 local entUseFix = {
 	["func_tank"] = true,
