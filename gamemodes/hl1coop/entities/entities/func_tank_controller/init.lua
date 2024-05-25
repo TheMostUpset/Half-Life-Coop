@@ -5,6 +5,7 @@ function ENT:Initialize()
 	self:SetNoDraw(true)
 	self:SetSolid(SOLID_NONE)
 	self.ParentEnt = self:GetParent()
+	self.Range = 80000
 end
 
 function ENT:Think()
@@ -12,7 +13,7 @@ function ENT:Think()
 		local target = self.ParentEnt:GetSaveTable().m_hTarget
 		if self.Explosive and IsValid(target) then
 			local dist = self:GetPos():DistToSqr(target:GetPos())
-			if dist <= 80000 then
+			if dist <= self.Range then
 				target = NULL
 				self:SetTarget(target)
 			end
@@ -34,7 +35,7 @@ function ENT:FindNewTarget()
 	for k, v in pairs(ents.FindInPVS(self:GetPos())) do
 		if v:IsPlayer() and v:Alive() and (v:Visible(self) or v:Visible(self.ParentEnt)) then
 			local dist = self:GetPos():DistToSqr(v:GetPos())
-			if self.Explosive and dist > 80000 or !self.Explosive then
+			if self.Explosive and dist > self.Range or !self.Explosive then
 				table.insert(t, {v, dist})
 			end
 		end
