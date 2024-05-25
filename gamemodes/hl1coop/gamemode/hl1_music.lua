@@ -1,6 +1,8 @@
+-- UNUSED FILE
+
 local tracks = {
 	["HL1_Music.track_2"] = "music/Half-Life01.mp3",
-	["HL1_Music.track_3"] = "music/Prospero01_0.mp3",
+	["HL1_Music.track_3"] = "music/hl1_song3.mp3",
 	["HL1_Music.track_4"] = "music/Half-Life12.mp3",
 	["HL1_Music.track_5"] = "music/Half-Life07.mp3",
 	["HL1_Music.track_6"] = "music/Half-Life10.mp3",
