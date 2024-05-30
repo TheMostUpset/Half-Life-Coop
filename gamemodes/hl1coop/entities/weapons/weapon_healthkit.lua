@@ -104,14 +104,14 @@ function SWEP:PrimaryAttack()
 		end
 		self:TakeClipPrimary(heal)
 		tr.Entity:SetHealth(tr.Entity:Health() + heal)
-		self:WeaponSound()
+		self:WeaponSound(self.Primary.Sound, 95)
 		self:SendWeaponAnim(ACT_VM_PRIMARYATTACK)
 		self.Owner:SetAnimation(PLAYER_ATTACK1)
 		self:SetWeaponIdleTime(CurTime() + math.Rand(10, 15))
 		self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 		self:SetNextSecondaryFire(CurTime() + self.Primary.Delay)
 	else
-		self:WeaponSound(self.SoundDeny)
+		self:WeaponSound(self.SoundDeny, 90)
 		self:SetNextPrimaryFire(CurTime() + .5)
 		self:SetNextSecondaryFire(CurTime() + .5)
 	end
@@ -163,7 +163,7 @@ function SWEP:SecondaryAttack()
 			net.SendToServer()
 		end
 	else
-		self:WeaponSound(self.SoundDeny)
+		self:WeaponSound(self.SoundDeny, 90)
 	end
 	
 	self:SetNextPrimaryFire(CurTime() + 1)
