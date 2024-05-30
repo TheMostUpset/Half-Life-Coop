@@ -489,6 +489,25 @@ lang.subtitleTable = {
 	["nihilanth/nil_deceive.wav"] = "Deceive you... will deceive you...",
 	["nihilanth/nil_now_die.wav"] = "Now die... now die... now...",
 	
+	-- uplink	
+	["BA_1SAT"] = "Open up the Reactor Complex so we can get down to safety.",
+	["SCI_2SAT"] = "I'm sorry, but those doors will not open until we send the 'All-Clear'.",
+	["BA_3SAT"] = "So send it already!",
+	["SCI_4SAT"] = "I would love to do that, but the area bombardment has made a wreck of my transmitter, the cables are separate, we have to aim it by hand and I'm getting high radiation levels in the transmitter dome. Nobody but a fool would go in there.",
+	["BA_5SAT"] = "What about this guy?",
+	["SCI_6SAT"] = "Yes. You could survive in that suit of yours. Very well. I will lower security on the satellite access elevator, and you can go up into the dome. I'll try to help you over the intercom.",
+	["scientist/c3a1_sci_dome.wav"] = "Freeman. You want to work quickly. Tune the transmitter to US NRC. I repeat! Tune to the US NRC.",
+	["scientist/c3a1_sci_done.wav"] = "Excellent. I'm sending the 'All-Clear' and the door should open now. We'll meet you down below.",
+	
+	["BA_ARG1A"] = "This is all happening because of you scientists!",
+	["BA_ARG2A"] = "It is, you made these mutants!",
+	["BA_ARG3A"] = "Shut up, someone's coming.",
+	["BA_LONGNITE"] = "Jeez, and I thought I had a long night. You look like hell! I don't suppose the day's going to be any easier. Listen, I'm going to wait it out right here. You go on ahead if you have to.",
+	["SC_FEAR4"] = "I just want to get out of this alive.",
+	["BA_SLEW"] = "Word is, once we get to the surface, the military has made arrangements for us.",
+	["SC_FEAR3"] = "No, I don't want to die!",
+	["SC_PLFEAR3"] = "No! Please!",
+	
 	-- regular NPC sentences (added after 03 Nov 2023) --
 	["SC_PHELLO0"] = "Ah, hello, Gordon Freeman. It's good to see you.",
 	["SC_PHELLO1"] = "Greetings.",
