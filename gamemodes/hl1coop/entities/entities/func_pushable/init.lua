@@ -119,7 +119,7 @@ function ENT:Initialize()
 
 	self:SetMoveType(MOVETYPE_STEP)
 	self:SetSolid(SOLID_BBOX)
-	local s = 1
+	local s = 1.01
 	mins, maxs = mins + Vector(s,s,.01), maxs - Vector(s,s,0)
 	self:SetCollisionBounds(mins, maxs)
 	
