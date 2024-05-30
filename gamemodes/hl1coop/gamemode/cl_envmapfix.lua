@@ -22,8 +22,10 @@ function GM:FixMapSpecular()
 	if cvar:GetBool() then
 		local list = {
 			"HALFLIFE/C1A0_LABFLR",
+			"HALFLIFE/C1A0_LABFLRC",
 			"HALFLIFE/C1A0_LABFLRD",
 			"halflife/c1a0_labflre",
+			"HALFLIFE/C1A0_LABW1",
 			"HALFLIFE/C1A0_LABW4",
 			"HALFLIFE/C1A0_LABW5",
 			"HALFLIFE/C1A0_LABW6",
