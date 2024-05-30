@@ -525,9 +525,10 @@ function GM:OnPlayerChat(ply, strText, bTeamOnly, bPlayerIsDead)
 	
 	if hook.Run("IsLobbyChatValid") then
 		local col = self:GetTeamColor(ply)
+		local nick = IsValid(ply) and ply:Nick() or "Console"
 		local lobbyChat = self.LobbyChat
 		lobbyChat.richText:InsertColorChange(col.r, col.g, col.b, 255)
-		lobbyChat.richText:AppendText(ply:Nick())
+		lobbyChat.richText:AppendText(nick)
 
 		lobbyChat.richText:InsertColorChange(255, 255, 255, 255)
 		lobbyChat.richText:AppendText(": "..strText.."\n")
