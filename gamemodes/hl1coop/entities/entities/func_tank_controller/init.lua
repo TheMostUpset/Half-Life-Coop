@@ -5,27 +5,42 @@ function ENT:Initialize()
 	self:SetNoDraw(true)
 	self:SetSolid(SOLID_NONE)
 	self.ParentEnt = self:GetParent()
-	self.Range = 80000
+	self.DangerDist = 80000 -- stops attacking and searching below this dist, used for explosives
+	self.UpdateTime = 1
+end
+
+function ENT:TargetVisible(target)
+	if self.CustomTraceCheck then
+		local startPos = self:GetPos()
+		local tr = util.TraceHull({
+			start = startPos,
+			endpos = target:EyePos(),
+			filter = {self, self.ParentEnt}
+		})		
+		return tr.Entity == target
+	else
+		return target:Visible(self) or target:Visible(self.ParentEnt)
+	end
 end
 
 function ENT:Think()
 	if IsValid(self.ParentEnt) and GetConVarNumber("ai_disabled") <= 0 and GetConVarNumber("ai_ignoreplayers") <= 0 then
-		local target = self.ParentEnt:GetSaveTable().m_hTarget
+		local target = self:GetTarget()
 		if self.Explosive and IsValid(target) then
 			local dist = self:GetPos():DistToSqr(target:GetPos())
-			if dist <= self.Range then
+			if dist <= self.DangerDist then
 				target = NULL
 				self:SetTarget(target)
 			end
 		end
-		if !IsValid(target) or !target:Alive() or !target:Visible(self) and !target:Visible(self.ParentEnt) then
+		if !IsValid(target) or !target:Alive() or !self:TargetVisible(target) then
 			if self.ForceTraceCheck and IsValid(target) then
 				self:SetTarget(NULL)
 			end
 			self:FindNewTarget()
 		end
 	end
-	self:NextThink(CurTime() + 1)
+	self:NextThink(CurTime() + self.UpdateTime)
 	return true
 end
 
@@ -33,9 +48,9 @@ function ENT:FindNewTarget()
 	local t = {}
 	
 	for k, v in pairs(ents.FindInPVS(self:GetPos())) do
-		if v:IsPlayer() and v:Alive() and (v:Visible(self) or v:Visible(self.ParentEnt)) then
+		if v:IsPlayer() and v:Alive() and self:TargetVisible(v) then
 			local dist = self:GetPos():DistToSqr(v:GetPos())
-			if self.Explosive and dist > self.Range or !self.Explosive then
+			if self.Explosive and dist > self.DangerDist or !self.Explosive then
 				table.insert(t, {v, dist})
 			end
 		end
@@ -49,6 +64,10 @@ function ENT:FindNewTarget()
 			self:SetTarget(target)
 		end
 	end
+end
+
+function ENT:GetTarget()
+	return self.ParentEnt:GetInternalVariable("m_hTarget")
 end
 
 function ENT:SetTarget(ent)
