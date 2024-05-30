@@ -255,7 +255,7 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 		if voteType == "map" and voteName then
 			local mapcheck = file.Exists("maps/"..voteName..".bsp", "GAME")
 			if !mapcheck then
-				ply:PrintMessage(HUD_PRINTTALK, "Not a valid map!")
+				ply:PrintMessage(HUD_PRINTTALK, "The map is not installed on the server or is invalid")
 				return
 			end
 			SetGlobalString("VoteName", voteName)
@@ -264,9 +264,8 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 				ply:PrintMessage(HUD_PRINTTALK, "Vote to kick is disallowed on this server")
 				return
 			end
-			local playercheck = player.GetAll()
 			local notvalid
-			for k, v in pairs(playercheck) do
+			for k, v in ipairs(player.GetAll()) do
 				if string.lower(v:Nick()) != string.lower(voteName) then
 					notvalid = true
 				else
@@ -395,7 +394,7 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 		SetGlobalInt("VoteNumNo", 0)
 		GAMEMODE:SetGlobalFloat("VoteTime", CurTime() + cvar_voteTime:GetFloat())
 		print(ply:Nick().." called vote: "..GetGlobalString("VoteType").." "..GetGlobalString("VoteName"))
-		for k, v in pairs(player.GetAll()) do
+		for k, v in ipairs(player.GetAll()) do
 			if v != ply then
 				v.voteOption = nil
 			end
@@ -404,9 +403,7 @@ concommand.Add("hl1_coop_callvote", function(ply, cmd, args)
 		ply.NextVote = CurTime() + cvar_voteCoolDown:GetFloat()
 		
 		if player.GetCount() > 1 then
-			net.Start("PlayClientSound")
-			net.WriteString(sndVoteStart)
-			net.Broadcast()
+			GAMEMODE:PlayGlobalSound(sndVoteStart)
 		end
 	else
 		PrintHelpText(ply)
