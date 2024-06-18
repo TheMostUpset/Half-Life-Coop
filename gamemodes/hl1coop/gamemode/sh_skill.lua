@@ -403,7 +403,8 @@ function GM:SetSkillLevel(num)
 	end
 	local skillTable = self:GetSkillTable(num)
 	
-	RunConsoleCommand("skill", num)
+	-- RunConsoleCommand("skill", num)
+	game.SetSkillLevel(num)
 	
 	if skillTable then
 		for k, v in pairs(skillTable) do
