@@ -556,22 +556,23 @@ function GM:OpenStartMenu(firstHintTime)
 					self.Unconnected = {}
 				end
 				if self.Unconnected then
-					for k, v in pairs(CONNECTING_PLAYERS_TABLE) do
-						if LocalPlayer():UserID() != v then
-							if !IsValid(self.Unconnected[v]) then
-								self.Unconnected[v] = PlayerPanel:Add("DPanel")
-								self.Unconnected[v]:Dock(TOP)
-								self.Unconnected[v]:DockMargin(0, 0, 0, 1)
-								self.Unconnected[v]:SetSize(PlayerPanel:GetWide(), 32)
-								self.Unconnected[v]:SetBackgroundColor(Color(40, 40, 40, 180))
+					for k, v in ipairs(CONNECTING_PLAYERS_TABLE) do
+						local userid, name = v[1], v[2]
+						if LocalPlayer():UserID() != userid then
+							if !IsValid(self.Unconnected[userid]) then
+								self.Unconnected[userid] = PlayerPanel:Add("DPanel")
+								self.Unconnected[userid]:Dock(TOP)
+								self.Unconnected[userid]:DockMargin(0, 0, 0, 1)
+								self.Unconnected[userid]:SetSize(PlayerPanel:GetWide(), 32)
+								self.Unconnected[userid]:SetBackgroundColor(Color(40, 40, 40, 180))
 								
-								self.Unconnected[v].Nick = vgui.Create("DLabel", self.Unconnected[v])
-								self.Unconnected[v].Nick:SetFont("HL1Coop_PlayerFrame")
-								self.Unconnected[v].Nick:SetText(LangString("menu_connectingpl").." ("..v..")")
-								self.Unconnected[v].Nick:SizeToContents()
-								self.Unconnected[v].Nick:SetPos(8, self.Unconnected[v]:GetTall() / 2 - self.Unconnected[v].Nick:GetTall() / 2 + 1)
-							elseif pl:UserID() == v then
-								self.Unconnected[v]:Hide()
+								self.Unconnected[userid].Nick = vgui.Create("DLabel", self.Unconnected[userid])
+								self.Unconnected[userid].Nick:SetFont("HL1Coop_PlayerFrame")
+								self.Unconnected[userid].Nick:SetText(LangString("menu_connectingpl").." ("..name..")")
+								self.Unconnected[userid].Nick:SizeToContents()
+								self.Unconnected[userid].Nick:SetPos(8, self.Unconnected[userid]:GetTall() / 2 - self.Unconnected[userid].Nick:GetTall() / 2 + 1)
+							elseif pl:UserID() == userid then
+								self.Unconnected[userid]:Hide()
 							end
 						end
 					end
@@ -635,8 +636,12 @@ function GM:OpenStartMenu(firstHintTime)
 		end
 		if CONNECTING_PLAYERS_TABLE and self.Unconnected then
 			for id, label in pairs(self.Unconnected) do
-				if IsValid(label) and (!table.HasValue(CONNECTING_PLAYERS_TABLE, id)) then
-					label:Remove()
+				if IsValid(label) then
+					local hasvalue = false
+					for k, v in ipairs(CONNECTING_PLAYERS_TABLE) do
+						if v[1] == id then hasvalue = true break end
+					end
+					if !hasvalue then label:Remove() end
 				end
 			end
 		end

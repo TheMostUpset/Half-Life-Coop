@@ -161,6 +161,7 @@ include("sv_hev.lua")
 include("sv_spec.lua")
 include("sv_vote.lua")
 include("sv_resource.lua")
+include("sv_transition.lua")
 
 util.AddNetworkString("HL1DeathMenu")
 util.AddNetworkString("HL1DeathMenuRemove")
@@ -393,6 +394,7 @@ end
 function GM:CreateCoopSpawnpoints(pos, ang, amount)
 	--local info_player_start = ents.FindByClass("info_player_start")[1]
 	--ang = self:IsCoop() and IsValid(info_player_start) and info_player_start:GetAngles() or ang
+	ang = ang or Angle()
 	amount = amount or game.MaxPlayers()
 	local transSpawnPointFirst = ents.Create("info_player_coop")
 	if IsValid(transSpawnPointFirst) then
@@ -481,6 +483,7 @@ function GM:InitPostEntity(restart)
 			if !restart then
 				if self:IsCoop() then self:SetCoopState(COOP_STATE_TRANSITION) end
 				if t[4] then SetGlobalFloat("GameTime", t[4]) end
+				if t[7] then SESSION_ID = t[7] end
 			end
 			if (!MAP.BlockSpawnpointCreation or !MAP.BlockSpawnpointCreation[lastmap]) and pos and ang then
 				ang[1] = 0
@@ -491,27 +494,13 @@ function GM:InitPostEntity(restart)
 					end
 				end
 			end
+			self:RestoreTransitionEntityData()
+			hook.Run("OnMapTransition", lastmap)
 		end
 	end
 	
-	if !self.LastPlayersTable then
-		local datafile = "hl1_coop/transition_players_"..game.GetMap()..".txt"
-		local tData = file.Read(datafile)
-		if tData then
-			self.LastPlayersTable = util.JSONToTable(tData)			
-			file.Delete(datafile)
-		end
-		if self:IsCoop() and self.LastPlayersTable then
-			if !CONNECTING_PLAYERS_TABLE then
-				CONNECTING_PLAYERS_TABLE = {}
-			end
-			for k, v in pairs(self.LastPlayersTable) do
-				if CONNECTING_PLAYERS_TABLE then
-					table.insert(CONNECTING_PLAYERS_TABLE, v.id)
-				end
-			end
-		end
-	end
+	self:RestorePlayerData()
+	
 	if GAMEMODE:GetCoopState() == COOP_STATE_TRANSITION and CONNECTING_PLAYERS_TABLE and #CONNECTING_PLAYERS_TABLE > 0 then
 		SetGlobalFloat("FirstWaitingTime", SysTime() + 60)
 		
@@ -562,14 +551,8 @@ function GM:InitPostEntity(restart)
 	if self:IsCoop() then
 		CallMapHook("ModifyMapEntities")
 		CallMapHook("CreateViewPoints")
-		CallMapHook("CreateExtraEnemies")
-		
-		-- removing global fades
-		for k, v in ipairs(ents.FindByClass("env_fade")) do
-			if !v:HasSpawnFlags(4) and (!MAP.EnvFadeWhitelist or !MAP.EnvFadeWhitelist[v:GetName()]) then
-				v:Remove()
-			end
-		end
+		CallMapHook("CreateExtraEnemies")		
+		hook.Run("RemoveGlobalEnvFades")
 	end
 	if self:GetSurvivalMode() then
 		CallMapHook("CreateSurvivalEntities")
@@ -588,6 +571,26 @@ function GM:InitPostEntity(restart)
 		end
 		if cvar_1hp:GetBool() then
 			self:Set1hpMode(true)
+		end
+		if !SESSION_ID then SESSION_ID = math.random(999) end
+	end
+end
+
+function GM:GetMapLoadType()
+	if self.TransitionMapName == game.GetMap() then return "transition" end
+	return game.MapLoadType()
+end
+
+function GM:OnMapTransition(prevmap)
+	CallMapHook("OnMapTransition", prevmap)
+end
+
+function GM:RemoveGlobalEnvFades()
+	-- removing global fades
+	for k, v in ipairs(ents.FindByClass("env_fade")) do
+		if !v:HasSpawnFlags(4) and (!MAP.EnvFadeWhitelist or !MAP.EnvFadeWhitelist[v:GetName()]) then
+			debugPrint("Removed global env_fade", v, v:GetName())
+			v:Remove()
 		end
 	end
 end
@@ -982,6 +985,21 @@ function GM:AcceptInput(ent, input, activator, caller, value)
 	return CallMapHook("OperateMapEvents", ent, input, caller, activator)
 end
 
+local entsRemovalCheck = {
+	["logic_relay"] = true,
+	["trigger_once"] = true,
+	["func_breakable"] = true,
+	["monster_tripmine"] = true,
+}
+function GM:EntityRemoved(ent)
+	-- print(ent, ent:MapCreationID())
+	if MAP.SaveTransitionEntityData then
+		if ent:MapCreationID() > -1 and entsRemovalCheck[ent:GetClass()] then
+			ent:MarkRemovedForTransition()
+		end
+	end
+end
+
 function GM:RestartMap()
 	CallMapHook("PreMapRestart")
 	self:PlayGlobalMusic("") -- stops the music
@@ -991,6 +1009,7 @@ function GM:RestartMap()
 	timer.Remove("LoadFirstMap")
 	LAST_CHECKPOINT = nil
 	LAST_CHECKPOINT_NUMBER = nil
+	self.RemovedMapEntities = nil
 	CallMapHook("OnMapRestart")
 	
 	hook.Run("CheckForShittyAddons")
@@ -1014,10 +1033,14 @@ function GM:OnPlayerFullyLoaded(ply)
 	local userid = ply:UserID()
 	
 	if CONNECTING_PLAYERS_TABLE then
-		if table.HasValue(CONNECTING_PLAYERS_TABLE, userid) then
-			table.RemoveByValue(CONNECTING_PLAYERS_TABLE, userid)			
-			UpdateConnectingTable()
+		local hasUpdates = false
+		for k, v in ipairs(CONNECTING_PLAYERS_TABLE) do
+			if v[1] == userid then
+				table.remove(CONNECTING_PLAYERS_TABLE, k)
+				hasUpdates = true
+			end
 		end
+		if hasUpdates then UpdateConnectingTable() end
 	end
 end
 
@@ -1054,10 +1077,13 @@ function GM:PlayerInitialSpawn(ply)
 		end)
 	end]]
 	
-	if GAMEMODE:GetCoopState() != COOP_STATE_FIRSTLOAD and self.TransitionMapName == game.GetMap() then
+	if GAMEMODE:GetCoopState() != COOP_STATE_FIRSTLOAD and self:GetMapLoadType() == "transition" then
 		if self.LastPlayersTable then
 			for k, v in pairs(self.LastPlayersTable) do
 				if v.id == ply:UserID() and v.steamid == ply:SteamID64() then
+					if MAP.SavePlayerScore and v.score then
+						ply:SetScore(v.score)
+					end
 					if !ply.SpawnedAsSpectator and v.spec then
 						ply:SetTeam(TEAM_SPECTATOR)
 						hook.Run("PlayerSpawnAsSpectator", ply)
@@ -1639,6 +1665,7 @@ function GM:ReadyScreenThink()
 					hook.Run("GameStart")
 				end
 			end)
+			SESSION_ID = math.random(999)
 		end
 	end
 end
@@ -1803,6 +1830,7 @@ function GM:NPCThink(npc)
 end
 
 function GM:CreateViewPointEntity(pos, ang)
+	ang = ang or Angle()
 	local ent = ents.Create("point_viewcontrol")
 	if IsValid(ent) then
 		ent:SetPos(pos)
@@ -2569,8 +2597,7 @@ hook.Add("player_connect", "ConnectionTableAdd", function(data)
 			CONNECTING_PLAYERS_TABLE = {}
 		end
 		if CONNECTING_PLAYERS_TABLE then
-			table.insert(CONNECTING_PLAYERS_TABLE, data.userid)
-			
+			table.insert(CONNECTING_PLAYERS_TABLE, {data.userid, data.name})			
 			UpdateConnectingTable()
 		end
 		--ChatMessage(data.name .. " ("..data.userid..") has connected to the server", 0)
@@ -2580,10 +2607,17 @@ end)
 gameevent.Listen("player_disconnect")
 hook.Add("player_disconnect", "ConnectionTableRemove", function(data)
 	if data.bot != 1 then
-		if CONNECTING_PLAYERS_TABLE and table.HasValue(CONNECTING_PLAYERS_TABLE, data.userid) then
-			table.RemoveByValue(CONNECTING_PLAYERS_TABLE, data.userid)
-			
-			UpdateConnectingTable()
+		if CONNECTING_PLAYERS_TABLE then
+			local hasUpdates = false
+			for k, v in ipairs(CONNECTING_PLAYERS_TABLE) do
+				if v[1] == data.userid then
+					table.remove(CONNECTING_PLAYERS_TABLE, k)
+					hasUpdates = true
+				end
+			end
+			if hasUpdates then			
+				UpdateConnectingTable()
+			end
 		end
 		--ChatMessage(data.name .. " ("..data.userid..") has left the server", 0)
 	end
@@ -2769,6 +2803,10 @@ function GM:OnNPCKilled(npc, attacker, inflictor)
 				end
 			end
 		end
+	end
+	
+	if MAP.SaveTransitionEntityData and npc:MapCreationID() > -1 then
+		npc:MarkRemovedForTransition()
 	end
 	
 	if self:GetCrackMode() then
@@ -2992,7 +3030,7 @@ function GM:EntityTakeDamage(ent, dmginfo)
 	end
 end
 
-function GM:OnEntityExplosion(ent, pos, radius, dmg)
+function GM:OnEntityExplosion(ent, pos, radius, dmg, hitEntity)
 	if self:GetCrackMode() then
 		hook.Run("CrackModeEntityExplosion", ent, pos, radius, dmg)
 	end
@@ -3144,25 +3182,6 @@ function GM:LoadFirstMap()
 	end
 	RunConsoleCommand("changelevel", map)
 	hook.Run("TransitPlayers", map)
-end
-
-function GM:TransitPlayers(maptochange, leveltransition)
-	local tPlys = {}
-	if leveltransition then
-		for k, v in ipairs(player.GetHumans()) do
-			local actwep = v:GetActiveWeapon()
-			local wepclass = IsValid(actwep) and actwep:GetClass()
-			table.insert(tPlys, {id = v:UserID(), steamid = v:SteamID64(), nick = v:Nick(), hp = v:Health(), armor = v:Armor(), wep = wepclass, alive = v:Alive(), spec = v:Team() == TEAM_SPECTATOR, weptable = hook.Run("StorePlayerAmmunitionNew", v)})
-		end
-	else
-		for k, v in ipairs(player.GetHumans()) do
-			table.insert(tPlys, {id = v:UserID(), steamid = v:SteamID64(), nick = v:Nick()})
-		end
-	end
-	if tPlys then
-		file.CreateDir("hl1_coop")
-		file.Write("hl1_coop/transition_players_"..maptochange..".txt", util.TableToJSON(tPlys))
-	end
 end
 
 concommand.Add("dropweapon", function(ply)

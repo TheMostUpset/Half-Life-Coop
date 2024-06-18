@@ -1329,8 +1329,8 @@ function GM:HUDPaint()
 				local gap = 32
 				for k, v in pairs(CONNECTING_PLAYERS_TABLE) do
 					gap = gap + 22
-					local pl = Player(v)
-					local text = IsValid(pl) and pl:Nick() or "id "..v
+					local pl = Player(v[1])
+					local text = IsValid(pl) and pl:Nick() or v[2].." (connecting)"
 					kewlText(text, "Trebuchet24", ScrW() / 2, ScrH() / 2 + gap, Color(255,230,140,alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 				end
 			end

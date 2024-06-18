@@ -51,5 +51,25 @@ if SERVER then
 		net.WriteVector(vec)
 		net.Broadcast()
 	end
+	
+	function meta:GetHammerID()
+		return self:GetInternalVariable("hammerid")
+	end
+	
+	function meta:MarkRemovedForTransition()
+		if !GAMEMODE.RemovedMapEntities then GAMEMODE.RemovedMapEntities = {} end
+		if GAMEMODE.RemovedMapEntities then
+			local exists = false
+			for _, id in ipairs(GAMEMODE.RemovedMapEntities) do
+				if id == self:MapCreationID() then
+					exists = true
+					break
+				end
+			end
+			if !exists then
+				table.insert(GAMEMODE.RemovedMapEntities, self:MapCreationID())
+			end
+		end
+	end
 
 end

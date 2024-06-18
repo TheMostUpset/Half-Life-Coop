@@ -72,8 +72,6 @@ ENT.RestrictedTransitions = {
 	{"hls02amrl", "hls02atohl03amrl", true},
 	{"hls03amrl", "hls03amrltohls04amrl"},
 	{"hls04amrl", "hls04amrltohls05amrl", true},
-	-- {"hls05amrl", "hls05amrltohls05bmrl"},
-	-- {"hls05bmrl", "hls05bmrltohls06amrl"},
 	{"hls05amrl", "hls05amrltohls06amrl"},
 	{"hls06amrl", "hls06amrltohls07amrl"},
 	{"hls07amrl", "hls07amrltohls07bmrl"},
@@ -172,19 +170,6 @@ function ENT:CanTrigger(ply)
 	return true
 end
 
-function ENT:SaveTransitionData(map, landmark, curmap, pos, ang)
-	local dataTable = {
-		map,
-		landmark,
-		curmap,
-		GAMEMODE:GetGameTime(),
-		pos,
-		ang
-	}
-	file.CreateDir("hl1_coop")
-	file.Write("hl1_coop/transition_data.txt", util.TableToJSON(dataTable))
-end
-
 function ENT:DoMapChange(ply)
 	if !self:CanTrigger(ply) then return end
 	if self.MapToChange then
@@ -195,13 +180,14 @@ function ENT:DoMapChange(ply)
 					local fisrtAng = self.FirstPlayerAng or ply:EyeAngles()
 					local pos = fisrtPos - v:GetPos()
 					local ang = fisrtAng
-					self:SaveTransitionData(self.MapToChange, self.landmark, game.GetMap(), pos, ang)
+					GAMEMODE:SaveTransitionData(self.MapToChange, self.landmark, game.GetMap(), pos, ang)
 				end
 			end
 		else
-			self:SaveTransitionData(self.MapToChange, self.landmark, game.GetMap())
+			GAMEMODE:SaveTransitionData(self.MapToChange, self.landmark, game.GetMap())
 		end
 		GAMEMODE:TransitPlayers(self.MapToChange, true)
+		GAMEMODE:SaveTransitionEntityData()
 		RunConsoleCommand("changelevel", self.MapToChange)
 	else
 		print("No map is set to change to")
@@ -262,7 +248,7 @@ function ENT:StartTouch(ent)
 end
 
 function ENT:Touch(ent)
-	if self.Untouchable then return end
+	if self.Untouchable or self:HasSpawnFlags(2) then return end
 	if IsValid(ent) and ent:IsPlayer() and ent:Alive() then
 		if GAMEMODE:IsCoop() and !self.PlayerWaitBlacklist[self.MapToChange] and GAMEMODE:GetActivePlayersNumber() > 1 then
 			if !self:CanTrigger(ent) then return end
