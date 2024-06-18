@@ -54,7 +54,7 @@ surface.CreateFont("MenuFontSmall", {
 surface.CreateFont("HintPanel", {
 	font	= "Trebuchet MS",
 	extended = true,
-	size	= ScrW() / 80,
+	size	= ScreenScaleH(10.5),
 	weight	= 800,
 })
 
@@ -457,11 +457,11 @@ function GM:OpenStartMenu(firstHintTime)
 	local lobbyChatY = menuY + height + 4
 	
 	local button_disconnect = vgui.Create("DLabel", menu)
-	button_disconnect:SetFont("MenuFont")
+	button_disconnect:SetFont("MenuFontSmall")
 	button_disconnect:SetText(LangString("menu_disconnect"))
 	button_disconnect:SetTextColor(menuTextCol)
 	button_disconnect:SizeToContents()
-	button_disconnect:SetPos(width / 2 + margin*2, height - button_disconnect:GetTall() - margin / 2)
+	button_disconnect:SetPos(width / 2 + margin*2, height - button_disconnect:GetTall() - margin / 1.44)
 	button_disconnect:SetMouseInputEnabled(true)
 	function button_disconnect:DoClick()
 		RunConsoleCommand("disconnect")
@@ -954,10 +954,11 @@ function GM:OpenLanguageMenu(short)
 	self.langSettings = vgui.Create("DPanel")
 	local langSettings = self.langSettings
 	local width = flagW * langCount + gap * (langCount + 1)
+	local height = short and ScrH() / 5 + flagH or ScrH() / 2.25
 	if ScrW() < width then
 		width = ScrW()
+		height = height * 1.75
 	end
-	local height = short and ScrH() / 5 + flagH or ScrH() / 2.25
 	langSettings:SetSize(width, height)
 	local langSettingsW, langSettingsH = langSettings:GetSize()
 	langSettings:SetPos(ScrW() / 2 - langSettingsW / 2, ScrH() / 2 - langSettingsH / 2)
@@ -977,7 +978,7 @@ function GM:OpenLanguageMenu(short)
 	langList:SetPos(gap, menuTitleY*7 + menuTitle:GetTall())
 	langList:SetSize(langSettingsW - gap*2, langSettingsH)
 	langList:SetSpaceX(gap)
-	langList:SetSpaceY(langSettingsH / 10)
+	langList:SetSpaceY(flagH*1.25)
 	
 	local function CreateOptions()
 		if short then return end
@@ -1080,9 +1081,9 @@ function GM:OpenLanguageMenu(short)
 			surface.DrawRect(x - 20, y - 20, fw, fh)
 		end
 		
-		for k, v in pairs(langList:GetChildren()) do
+		for k, v in ipairs(langList:GetChildren()) do
 			local x, y = self:GetChildPosition(v)
-			draw.SimpleText(v.Title, "MenuFontSmall", x + flagW / 2, y * 2, Color(200,200,200,255), TEXT_ALIGN_CENTER)
+			draw.SimpleText(v.Title, "MenuFontSmall", x + flagW / 2, y + flagH*1.4, Color(200,200,200,255), TEXT_ALIGN_CENTER)
 		end
 	end
 	CreateOptions()
