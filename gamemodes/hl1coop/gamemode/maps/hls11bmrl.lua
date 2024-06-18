@@ -33,13 +33,15 @@ function MAP:ModifyMapEntities()
 	end
 	
 	for k, v in ipairs(ents.FindByClass("func_tank*")) do
-		if v:GetName() == "brad_turret" or v:GetName() == "sniper1" or v:GetName() == "sniper2" then
+		local name = v:GetName()
+		if name == "brad_turret" or name == "brad_turret_m" or name == "sniper1" or name == "sniper2" then
 			local cEnt = ents.Create("func_tank_controller")
 			if IsValid(cEnt) then
 				cEnt:SetParent(v)
 				cEnt:SetPos(v:GetPos())
 				cEnt:Spawn()
-				if v:GetName() == "brad_turret" then
+				if name == "brad_turret" then
+					v:SetSaveValue("yawrange", 3)
 					cEnt.Explosive = true
 				end
 			end
