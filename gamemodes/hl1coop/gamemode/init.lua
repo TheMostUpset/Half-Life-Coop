@@ -191,6 +191,8 @@ util.AddNetworkString("SetGlobalFloatFix")
 util.AddNetworkString("SetGlobalIntFix")
 util.AddNetworkString("SetPlayerModel")
 util.AddNetworkString("SetPlayerModelColor")
+util.AddNetworkString("SetPlayerModelSkin")
+util.AddNetworkString("SetPlayerModelBodygroups")
 util.AddNetworkString("ApplyViewModelHands")
 util.AddNetworkString("ShowCaption")
 util.AddNetworkString("RagdollGib")
@@ -241,6 +243,20 @@ net.Receive("SetPlayerModelColor", function(len, ply)
 		if col[1] and col[2] and col[3] then
 			ply:SetPlayerColor(Vector(col[1] / 255, col[2] / 255, col[3] / 255))
 		end
+	end
+end)
+
+net.Receive("SetPlayerModelSkin", function(len, ply)
+	if IsValid(ply) and ply:Alive() then
+		local skin = net.ReadUInt(5)
+		ply:SetSkin(skin)
+	end
+end)
+
+net.Receive("SetPlayerModelBodygroups", function(len, ply)
+	if IsValid(ply) and ply:Alive() then
+		local str = net.ReadString()
+		ply:SetBodyGroups(str)
 	end
 end)
 

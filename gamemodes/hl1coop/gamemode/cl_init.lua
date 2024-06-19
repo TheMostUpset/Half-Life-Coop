@@ -121,6 +121,8 @@ end
 local cvar_debug_cl = CreateClientConVar("_hl1coop_debug_client", 0, false, false, "Print clientside debug info in console", 0, 1)
 CreateClientConVar("hl1_coop_cl_autoswitch", 1, true, true, "Enable weapon autoswitch on pickup", 0, 1)
 CreateClientConVar("hl1_coop_cl_playermodel", "Helmet (HLS)", true, true, "Player model")
+CreateClientConVar("hl1_coop_cl_playermodel_skin", "0", true, true, "Player model skin")
+CreateClientConVar("hl1_coop_cl_playermodel_bodygroups", "", true, true, "Player model bodygroups")
 CreateClientConVar("hl1_coop_cl_playercolor", "", true, true, "Player model color")
 cvar_thirdperson = CreateClientConVar("hl1_coop_cl_thirdperson", 0, false, false, "Enable third person view", 0, 1)
 cvar_showtriggers = CreateClientConVar("_hl1coop_showtriggers", 0, false, false, nil, 0, 1)

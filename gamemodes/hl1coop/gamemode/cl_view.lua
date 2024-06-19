@@ -142,6 +142,14 @@ function GM:CalcModelSelectView(ply, pos, ang, fov)
 	if ply.PreviewModel then
 		ply:SetModel(ply.PreviewModel)
 	end
+	if ply.PreviewModelSkin then
+		ply:SetSkin(ply.PreviewModelSkin)
+	end
+	if ply.PreviewModelBodygroups then
+		for id, val in pairs(ply.PreviewModelBodygroups) do
+			ply:SetBodygroup(id, val)
+		end
+	end
 	local camAng = Angle(0, ang[2] + 140, 0)
 	if !input.IsMouseDown(MOUSE_LEFT) then
 		local pnl = vgui.GetHoveredPanel()

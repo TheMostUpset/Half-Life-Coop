@@ -2073,6 +2073,12 @@ function GM:ModelSelectionMenu()
 	if ply.PreviewModel then
 		ply.PreviewModel = nil
 	end
+	if ply.PreviewModelSkin then
+		ply.PreviewModelSkin = nil
+	end
+	if ply.PreviewModelBodygroups then
+		ply.PreviewModelBodygroups = nil
+	end
 	
 	self:SetPlayerModelView(true)
 	self.plyModelMenu = vgui.Create("DPanel")
@@ -2103,6 +2109,61 @@ function GM:ModelSelectionMenu()
 	backgr:SetBackgroundColor(menuBackgroundColor)
 	sheet:AddSheet("Model", backgr, "icon16/status_online.png")
 	
+	local properties_table
+	local function CreatePropertiesTab(model)
+		if properties_table then
+			sheet:CloseTab(properties_table.Tab, true)
+			ply.PreviewModelSkin = nil
+			ply.PreviewModelBodygroups = nil
+			properties_table = nil
+		end
+		if model then
+			ply:SetModel(model) -- doing this for just one frame to get bodygroups
+			local bodygroups = ply:GetBodyGroups()
+			local skinCount = ply:SkinCount()
+			-- PrintTable(bodygroups)
+			if skinCount > 1 or #bodygroups > 1 then
+				local properties = vgui.Create("DPanel", sheet)
+				properties:SetBackgroundColor(Color(50, 50, 50, 150))
+				properties_table = sheet:AddSheet("Properties", properties, "icon16/cog.png")
+				-- function sheet:OnActiveTabChanged(old, new)
+					-- print(new == properties_table.Tab)
+				-- end
+				if skinCount > 1 then
+					local skin = vgui.Create("DNumSlider", properties)
+					skin:SetText("Skin")
+					skin:SetDecimals(0)
+					skin:SetMinMax(0, skinCount - 1)
+					skin:SetValue(cvars.Number("hl1_coop_cl_playermodel_skin"))
+					skin:Dock(TOP)
+					skin:DockMargin( 40, 16, 20, 0 )
+					function skin:OnValueChanged(val)
+						ply.PreviewModelSkin = math.Round(val)
+					end
+				end
+				if #bodygroups > 1 then
+					ply.PreviewModelBodygroups = {}
+					for k, v in ipairs(bodygroups) do
+						local curVal = ply:GetBodygroup(v.id)
+						ply.PreviewModelBodygroups[v.id] = curVal
+						if v.num > 1 then
+							local bodygr = vgui.Create("DNumSlider", properties)
+							bodygr:SetText(v.name)
+							bodygr:SetDecimals(0)
+							bodygr:SetMinMax(0, v.num - 1)
+							bodygr:SetValue(curVal)
+							bodygr:Dock(TOP)
+							bodygr:DockMargin( 40, 16, 20, 0 )
+							function bodygr:OnValueChanged(val)
+								ply.PreviewModelBodygroups[v.id] = math.Round(val)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	
 	local List = vgui.Create("DIconLayout", backgr)
 	List:Dock(FILL)
 	List:SetSpaceY(5)
@@ -2118,6 +2179,7 @@ function GM:ModelSelectionMenu()
 		function mdl:DoClick()
 			surface.PlaySound(sndMenu2)
 			ply.PreviewModel = model
+			CreatePropertiesTab(model)
 		end
 	end
 	
@@ -2141,6 +2203,8 @@ function GM:ModelSelectionMenu()
 		ply:SetPlayerColor(Vector(col.r / 255, col.g / 255, col.b / 255))
 	end
 	
+	CreatePropertiesTab(ply:GetModel())
+	
 	local button_gap = plyModelW / 5
 	
 	local applyb = vgui.Create("DLabel", plyModel)
@@ -2153,6 +2217,8 @@ function GM:ModelSelectionMenu()
 	function applyb:DoClick()
 		surface.PlaySound(sndMenu3)
 		local model = ply.PreviewModel
+		local skin = ply.PreviewModelSkin
+		local bodygroups = ply.PreviewModelBodygroups
 		if model then
 			local convar_mdl = GetConVar("hl1_coop_cl_playermodel")
 			convar_mdl:SetString(player_manager.TranslateToPlayerModelName(model))
@@ -2168,7 +2234,25 @@ function GM:ModelSelectionMenu()
 			net.Start("SetPlayerModelColor")
 			net.WriteString(str)
 			net.SendToServer()
-		end			
+		end
+		if skin then
+			local convar_skin = GetConVar("hl1_coop_cl_playermodel_skin")
+			convar_skin:SetInt(skin)
+			net.Start("SetPlayerModelSkin")
+			net.WriteUInt(skin, 5)
+			net.SendToServer()
+		end
+		if bodygroups then
+			local convar_bodygroups = GetConVar("hl1_coop_cl_playermodel_bodygroups")
+			local str = ""
+			for k, v in pairs(bodygroups) do
+				str = str..v
+			end
+			convar_bodygroups:SetString(str)
+			net.Start("SetPlayerModelBodygroups")
+			net.WriteString(str)
+			net.SendToServer()
+		end
 		GAMEMODE:ModelSelectionMenu()
 	end
 	function applyb:OnCursorEntered()

@@ -128,6 +128,17 @@ function meta:SetupPlayerModel()
 		local modelname = player_manager.TranslatePlayerModel(cl_playermodel)
 		util.PrecacheModel(modelname)
 		self:SetModel(modelname)
+		
+		local cl_skin = self:GetInfo("hl1_coop_cl_playermodel_skin")
+		if tonumber(cl_skin) >= self:SkinCount() then
+			self:ConCommand("hl1_coop_cl_playermodel_skin 0")
+			self:SetSkin(0)
+		else
+			self:SetSkin(cl_skin)
+		end
+		
+		local cl_bodygroups = self:GetInfo("hl1_coop_cl_playermodel_bodygroups")
+		self:SetBodyGroups(cl_bodygroups)
 	else
 		if self:IsSuitEquipped() then
 			self:SetModel(DEFAULT_PLAYERMODEL_PATH)
