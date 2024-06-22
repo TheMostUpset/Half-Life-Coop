@@ -67,6 +67,28 @@ if GSRCHUD then
 	GSRCHUD.hook.add('ShowLoadingScreen', HOOK_NAME, function()
 		return GSRCHUD.config.getLoading() and game.SinglePlayer() and !GAMEMODE:GetSpeedrunMode()
 	end)
+	
+	-- disabling other known HUDs unless we have disabled GSRCHUD
+	if UT99HUD then
+		local oldFunc = UT99HUD.IsEnabled
+		function UT99HUD:IsEnabled()
+			if cvar_huddisable:GetBool() then
+				return oldFunc()
+			else
+				return false
+			end
+		end
+	end
+	if SeriousHUD then
+		local oldFunc = SeriousHUD.Enabled
+		function SeriousHUD:Enabled()
+			if cvar_huddisable:GetBool() then
+				return oldFunc()
+			else
+				return false
+			end
+		end
+	end
 end
 
 if HL1AHUD then
