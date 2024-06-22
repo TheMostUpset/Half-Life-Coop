@@ -9,7 +9,6 @@ function ENT:KeyValue(k, v)
 	if k == "OnMapSpawn" or k == "OnMapTransition" or k == "OnNewGame" or k == "OnLoadGame" or k == "OnBackgroundMap" then
 		self:StoreOutput(k, v)
 	end
-	-- print(k,v)
 end
 
 function ENT:Initialize()
