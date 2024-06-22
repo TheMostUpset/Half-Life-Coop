@@ -484,12 +484,12 @@ function GM:OpenStartMenu(firstHintTime)
 	function button_rdy:DoClick()
 		RunConsoleCommand("_hl1_coop_ready")
 		if player.GetCount() > 1 or (CONNECTING_PLAYERS_TABLE and #CONNECTING_PLAYERS_TABLE > 0) then
-			surface.PlaySound(sndMenu3)
+			-- surface.PlaySound(sndMenu3)
 			self:SetMouseInputEnabled(false)
 			self:SetFont("MenuFontSmall")
 			self:SetText(LangString("menu_waitingpl"))
 			self:SizeToContents()
-			self:SetX((width - self:GetWide()) / 2)
+			self:SetX((menu:GetWide() - self:GetWide()) / 2) -- used menu:GetWide() rather than var 'width' because menu can have two different sizes
 			button_disconnect:Hide()
 		end
 	end
@@ -788,7 +788,11 @@ function GM:OpenStartMenu(firstHintTime)
 			hint_panel:SetVisible(true)
 			lobbyChat:SetVisible(true)
 			button:SetX(menu:GetWide() - button:GetWide() - 2)
-			button_rdy:SetX((width / 2 - button_rdy:GetWide()) - margin*2)
+			if button_rdy:IsMouseInputEnabled() then -- if "ready"
+				button_rdy:SetX((width / 2 - button_rdy:GetWide()) - margin*2)
+			else -- if "waiting for players"
+				button_rdy:SetX((width - button_rdy:GetWide()) / 2)
+			end
 			maxPlayers:SetX((menu:GetWide() - maxPlayers:GetWide()) / 2)
 		end)
 	end
