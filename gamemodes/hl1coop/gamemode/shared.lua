@@ -55,10 +55,12 @@ GM.Cooperative = true
 GM.Changelog = [[- Added 1 HP mode
 - Added German language (thanks to Christian Maubach)
 - Added bunch of subtitles for regular sentences
+- Added bodygroup options to player model selector
+- Added nicknames for connecting players
 - Added player nickname on their weaponbox
 - Added ability to respawn for score in survival mode
-- Added hl1_coop_sv_transparentplayers convar
 - Added hl1coop_npcrepl_ichthyosaur convar
+- Added hl1_coop_sv_transparentplayers convar
 - Added Break input and OnBreak output on func_pushable
 - Added support for custom lang files
 - Reimagined lobby menu
