@@ -1019,14 +1019,15 @@ end
 function GM:RestartMap()
 	CallMapHook("PreMapRestart")
 	self:PlayGlobalMusic("") -- stops the music
-	game.CleanUpMap()
-	hook.Run("InitPostEntity", true)
 	self:SetGlobalFloat("WaitTime", 0)
 	timer.Remove("LoadFirstMap")
 	LAST_CHECKPOINT = nil
 	LAST_CHECKPOINT_NUMBER = nil
 	self.RemovedMapEntities = nil
-	CallMapHook("OnMapRestart")
+	game.CleanUpMap(nil, nil, function()
+		hook.Run("InitPostEntity", true)
+		CallMapHook("OnMapRestart")
+	end)
 	
 	hook.Run("CheckForShittyAddons")
 end
