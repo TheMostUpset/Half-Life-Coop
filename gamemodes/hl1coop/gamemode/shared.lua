@@ -90,10 +90,12 @@ cvar_price_movetocheckpoint = CreateConVar("hl1_coop_price_movetocheckpoint", 50
 hl1_coop_sv_friendlyfire = CreateConVar("hl1_coop_sv_friendlyfire", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow friendly fire", 0, 1)
 local hl1_coop_sv_custommodels = CreateConVar("hl1_coop_sv_custommodels", 0, {FCVAR_ARCHIVE, FCVAR_REPLICATED, FCVAR_NOTIFY}, "Allow custom player models", 0, 1)
 SetGlobalBool("hl1_coop_sv_custommodels", hl1_coop_sv_custommodels:GetBool())
-cvars.AddChangeCallback("hl1_coop_sv_custommodels", function(name, value_old, value_new)
-	local b = tobool(value_new)
-	GAMEMODE:SetGlobalBool("hl1_coop_sv_custommodels", b)
-end)
+if SERVER then
+	cvars.AddChangeCallback("hl1_coop_sv_custommodels", function(name, value_old, value_new)
+		local b = tobool(value_new)
+		GAMEMODE:SetGlobalBool("hl1_coop_sv_custommodels", b)
+	end)
+end
 
 player_manager.AddValidModel("Helmet (HLS)", DEFAULT_PLAYERMODEL_PATH)
 player_manager.AddValidModel("Scientist (Einstein)(HLS)", "models/player/coop/scientist_einstien.mdl")
