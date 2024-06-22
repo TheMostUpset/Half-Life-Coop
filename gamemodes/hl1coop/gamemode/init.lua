@@ -2368,6 +2368,24 @@ concommand.Add("_hl1_coop_ready", function(ply, cmd, args, argStr)
 		UnreadyKickTimeoutStarted = true
 	end
 end)
+--[[concommand.Add("_hl1_coop_unready", function(ply, cmd, args, argStr)
+	if !ply or !IsValid(ply) or GAMEMODE:GetCoopState() != COOP_STATE_FIRSTLOAD or ply:GetNWInt("Status") == PLAYER_NOTREADY then return end
+	ply:SetNWInt("Status", PLAYER_NOTREADY)
+	GAMEMODE:PlayGlobalSound("buttons/combine_button1.wav")
+	
+	-- if no one is ready, stop kick timer
+	if UnreadyKickTimeoutStarted then
+		local oneReady = false
+		for k, v in ipairs(player.GetHumans()) do
+			if ply:GetNWInt("Status") == PLAYER_READY then
+				oneReady = true
+			end
+		end
+		if !oneReady then
+			UnreadyKickTimeoutStarted = false
+		end
+	end
+end)]]
 
 function GM:RespawnFunc(ply, rtype)
 	if !ply or !IsValid(ply) or ply:Alive() then return end
