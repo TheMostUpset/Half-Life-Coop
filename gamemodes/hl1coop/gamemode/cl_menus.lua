@@ -1504,7 +1504,7 @@ function GM:PlayerSettingsOptions()
 		{"DCheckBoxLabel", "configmenu_chair", "hl1_cl_crosshair", 1},
 		{"DNumSlider", "configmenu_chairscale", "hl1_cl_crosshair_scale", 1, 1, 1, 4},
 		{"DNumSlider", "configmenu_vmfov", "hl1_cl_viewmodelfov", 90, 0, 70, 120},
-		{"DComboBox", "configmenu_bobstyle", "hl1_coop_cl_bobstyle", 1, choices = {"Half-Life", "Half-Life WON", "Realistic", "Half-Life: Source", "Quake 3", "Unreal Tournament"}},
+		{"DComboBox", "configmenu_bobstyle", "hl1_coop_cl_bobstyle", 1, choices = {"Half-Life", "Half-Life WON", "Realistic", "Half-Life: Source", "Quake 3", "Unreal Tournament", "Serious Sam"}},
 		{"DCheckBoxLabel", "configmenu_custombob", "hl1_coop_cl_bobcustom", 1},
 		{"DCheckBoxLabel", "configmenu_viewbob", "hl1_cl_viewbob", 1},
 		{"DNumSlider", "configmenu_bob", "hl1_cl_bob", 0.01, 2, 0, 0.05},

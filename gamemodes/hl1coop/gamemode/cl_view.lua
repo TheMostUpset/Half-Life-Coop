@@ -15,6 +15,7 @@ local VIEWBOB_REALISTIC = 3
 local VIEWBOB_HLS = 4
 local VIEWBOB_Q3 = 5
 local VIEWBOB_UT99 = 6
+local VIEWBOB_SERIOUSSAM = 7
 
 function GM:CalcBob(ply)
 	if !IsValid(ply) then return 0 end
@@ -360,6 +361,8 @@ function GM:CalcView(ply, pos, ang, fov)
 					pos = pos - ang:Right() * UT99viewBobSide
 					pos[3] = pos[3] - UT99viewBobUp
 				end
+			elseif iBobStyle == VIEWBOB_SERIOUSSAM then
+				-- welp
 			elseif iBobStyle == VIEWBOB_NONE then
 				-- nothing
 			else				
@@ -394,6 +397,10 @@ end
 
 local swayangles = Angle()
 local ground = 0
+
+local vertOffset = 0
+local vertOffsetSinMul = 0
+local vertOffsetSinTime = 0
 
 local BobTime = 0
 local BobTimeLast = RealTime()
@@ -568,6 +575,51 @@ function GM:CalcViewModelView(wep, vm, oldPos, oldAng, pos, ang)
 		if cvar_viewbob and cvar_viewbob:GetBool() then
 			oldPos = oldPos - oldAng:Right() * UT99viewBobSide
 			oldPos[3] = oldPos[3] - UT99viewBobUp
+		end
+	elseif iBobStyle == VIEWBOB_SERIOUSSAM then
+		local vel = ply:GetVelocity()
+		local speed = vel:Length2D()
+		speed = math.min(speed/768, .4)
+		local bobspeed = 10.5
+		local sine = math.sin(CurTime() * bobspeed)
+		local bobright = sine * speed
+		local bobup = sine * bobright / 2
+		local bobscale = 1.25 * math.Clamp(-vertOffset + 1, 0, 1)
+		
+		if game.SinglePlayer() or IsFirstTimePredicted() then
+			local FT = FrameTime()
+			if ply:IsOnGround() then
+				gnd_t = Lerp(FT*16, gnd_t, 1)
+			else
+				gnd_t = math.max(Lerp(FT*5, gnd_t, 0.01), 0)
+			end
+		end
+
+		local modelindex = vm:ViewModelIndex()
+		if modelindex == 0 then
+			oldPos = oldPos + bobright * bobscale * ang:Right() *gnd_t
+		else
+			oldPos = oldPos - bobright * bobscale * ang:Right() *gnd_t
+		end	
+		oldPos = oldPos + bobup * bobscale * ang:Up() *gnd_t
+		
+		if ply:GetMoveType() == MOVETYPE_WALK then
+			if modelindex == 0 and (game.SinglePlayer() or IsFirstTimePredicted()) then
+				local vertVel = vel[3]
+				if vertVel < 0 then
+					vertOffset = math.max(vertVel * .005, -.55)
+					vertOffsetSinTime = 0
+					vertOffsetSinMul = math.min(vertVel * -.00075, .75)
+				elseif vertOffsetSinMul > .0001 then
+					local FT = FrameTime()
+					if FT > 0 then
+						vertOffsetSinTime = vertOffsetSinTime + FT * 10
+						vertOffsetSinMul = Lerp(FT*5, vertOffsetSinMul, 0)
+						vertOffset = Lerp(FT*16, vertOffset, 0) + math.sin(vertOffsetSinTime) * vertOffsetSinMul * FT*100
+					end
+				end
+			end
+			oldPos = oldPos - ang:Up() * vertOffset
 		end
 	elseif iBobStyle == VIEWBOB_NONE then
 		-- nothing
