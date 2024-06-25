@@ -19,6 +19,14 @@ local function RemoveShittyHooks()
 	hook.Remove("EntityTakeDamage", "RM_RagEffects")
 	hook.Remove("EntityTakeDamage", "RM_RagOnFall")
 	hook.Remove("PlayerTick", "shrinkinator_PlayerUpdateSize") -- breaks movement values
+	hook.Remove("EntityEmitSound", "ImprovedNPCSounds_FixSounds") -- we don't need these 'fixes'
+	hook.Remove("Think", "ImprovedNPCSounds_OnGargSpotEnemy") -- poor code that breaks scripts and stuff
+	hook.Remove("OnEntityCreated", "HL1Gibs") -- we don't need these 'fixes'
+	hook.Remove("OnEntityCreated", "HL1Thonk") -- it's badly coded and causes unexpected issues
+	hook.Remove("PreCleanupMap", "HL1SentryFix")
+	hook.Remove("PostCleanupMap", "HL1SentryFix")
+	hook.Remove("PlayerInitialSpawn", "HL1SentryFix")
+	hook.Remove("EntityTakeDamage", "HL1SentryBuff")
 	if CLIENT then
 		hook.Remove("CalcView", "QuakeBobbing") -- duplicate of current CalcView
 		hook.Remove("CalcViewModelView", "QuakeGunBobbing") -- same but CalcViewModelView
