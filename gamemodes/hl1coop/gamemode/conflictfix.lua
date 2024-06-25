@@ -27,6 +27,8 @@ local function RemoveShittyHooks()
 	hook.Remove("PostCleanupMap", "HL1SentryFix")
 	hook.Remove("PlayerInitialSpawn", "HL1SentryFix")
 	hook.Remove("EntityTakeDamage", "HL1SentryBuff")
+	hook.Remove("DoPlayerDeath", "SpawnHLGibs") -- we have our own gibs
+	hook.Remove("EntityTakeDamage", "SpawnHLNPCGibs")
 	if CLIENT then
 		hook.Remove("CalcView", "QuakeBobbing") -- duplicate of current CalcView
 		hook.Remove("CalcViewModelView", "QuakeGunBobbing") -- same but CalcViewModelView
@@ -63,6 +65,9 @@ local function RemoveShittyHooks()
 		hook.Remove("ShowSpare1", "GWSShowInventory")
 		hook.Remove("PlayerButtonDown", "GWSInvBind")
 		hook.Remove("PlayerCanPickupWeapon", "GWSLimitWeapons")
+		hook.Remove("EntityRemoved", "hl1_LongJump")
+		hook.Remove("PostPlayerDeath", "hl1_LongJump")
+		hook.Remove("KeyPress", "hl1_LongJump")
 	end
 	
 end
