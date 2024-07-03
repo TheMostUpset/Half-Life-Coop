@@ -261,7 +261,7 @@ function ENT:Touch(ent)
 				ent:Freeze(true)
 				ent:AddFlags(FL_GODMODE)
 				ent:AddFlags(FL_NOTARGET)
-				if cvar_transparentplayers:GetBool() then
+				if cvar_waitcloak:GetBool() then
 					ent:SetColor(Color(150, 150, 150, 150))
 					ent:SetRenderMode(RENDERMODE_TRANSALPHA)
 				end

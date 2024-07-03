@@ -68,7 +68,7 @@ function ENT:AddPlayer(ply)
 			end
 			ply:AddFlags(FL_GODMODE)
 			ply:AddFlags(FL_NOTARGET)
-			if cvar_transparentplayers:GetBool() then
+			if cvar_waitcloak:GetBool() then
 				ply:SetColor(Color(150, 150, 150, 150))
 				ply:SetRenderMode(RENDERMODE_TRANSALPHA)
 			end

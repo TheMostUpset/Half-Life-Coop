@@ -1,4 +1,16 @@
+DeriveGamemode("base")
+
 MAP = {}
+
+COOP_STATE_FIRSTLOAD = 0
+COOP_STATE_TRANSITION = 1
+COOP_STATE_INGAME = 2
+COOP_STATE_GAMEOVER = 3
+COOP_STATE_ENDTITLES = 4
+
+PLAYER_NOTREADY = 1
+PLAYER_READY = 2
+
 DEFAULT_PLAYERMODEL_PATH = Model("models/player/coop/helmet.mdl")
 
 LAST_CHECKPOINT_MINDISTANCE = 1500 -- used for "teleport to checkpoint" thingy
@@ -10,7 +22,6 @@ BIND_VOTE_NO = KEY_F2
 BIND_THIRDPERSON = KEY_F3
 BIND_QUICKMENU = KEY_F4
 
-DeriveGamemode("base")
 include("sh_chatsounds.lua")
 include("sh_entity.lua")
 include("sh_player.lua")
@@ -60,7 +71,7 @@ GM.Changelog = [[- Added 1 HP mode
 - Added player nickname on their weaponbox
 - Added ability to respawn for score in survival mode
 - Added hl1coop_npcrepl_ichthyosaur convar
-- Added hl1_coop_sv_transparentplayers convar
+- Added hl1_coop_sv_waitcloak convar
 - Added Break input and OnBreak output on func_pushable
 - Added support for custom lang files
 - Reimagined lobby menu
@@ -73,15 +84,6 @@ GM.Changelog = [[- Added 1 HP mode
 - Fixed extra weapons not saving through levels
 - Fixed NPCs being invisible in Crack Mode
 - Minor fixes]]
-
-COOP_STATE_FIRSTLOAD = 0
-COOP_STATE_TRANSITION = 1
-COOP_STATE_INGAME = 2
-COOP_STATE_GAMEOVER = 3
-COOP_STATE_ENDTITLES = 4
-
-PLAYER_NOTREADY = 1
-PLAYER_READY = 2
 
 cvar_price_respawn_here = CreateConVar("hl1_coop_price_respawn_here", 100, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, 'How much score "Respawn here with 25 hp" costs')
 cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn with full loadout costs")
@@ -136,7 +138,8 @@ local HL1_Chapters = {
 }
 
 Campaigns = {
-	{Title = "Half-Life", Maps = HL1_Chapters, Icon = "icon16/hl1.png"}
+	{Title = "Half-Life", Maps = HL1_Chapters, Icon = "icon16/hl1.png"},
+	-- {Title = "Uplink Extended", Maps = {"uplinkext1", "uplinkext2", "uplinkext3", "uplinkext4"}, Icon = "icon16/hl1.png"}
 }
 
 function AddCampaign(title, maptable, icon)
