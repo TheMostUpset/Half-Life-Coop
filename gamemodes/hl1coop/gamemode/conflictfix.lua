@@ -68,6 +68,8 @@ local function RemoveShittyHooks()
 		hook.Remove("EntityRemoved", "hl1_LongJump")
 		hook.Remove("PostPlayerDeath", "hl1_LongJump")
 		hook.Remove("KeyPress", "hl1_LongJump")
+		hook.Remove("InitPostEntity", "sm") -- my goodness...
+		hook.Remove("PostCleanupMap", "sm")
 	end
 	
 end
