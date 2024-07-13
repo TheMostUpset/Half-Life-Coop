@@ -2405,6 +2405,15 @@ function GM:CloseSubMenus()
 	end
 end
 
+if VERSION >= 240712 then
+
+function GM:OnPauseMenuShow()
+	self:OpenMainMenu()
+	return false
+end
+
+else
+
 function GM:PreRender()
 	if gui.IsGameUIVisible() then
 		if self.Menu.MainMenuFrame and self.Menu.MainMenuFrame:IsVisible() then
@@ -2416,4 +2425,6 @@ function GM:PreRender()
 			return true
 		end
 	end
+end
+
 end
