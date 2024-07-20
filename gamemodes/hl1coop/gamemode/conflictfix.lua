@@ -70,6 +70,7 @@ local function RemoveShittyHooks()
 		hook.Remove("KeyPress", "hl1_LongJump")
 		hook.Remove("InitPostEntity", "sm") -- my goodness...
 		hook.Remove("PostCleanupMap", "sm")
+		hook.Remove("Think", "InfiniteAmmo")
 	end
 	
 end
