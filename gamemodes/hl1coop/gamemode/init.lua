@@ -281,7 +281,14 @@ local cvar_unreadykicktime = CreateConVar("hl1_coop_sv_unreadykicktime", 60, FCV
 cvar_waitcloak = CreateConVar("hl1_coop_sv_waitcloak", 1, FCVAR_ARCHIVE, "Make players transparent when touching wait triggers", 0, 1)
 
 GM.ReturnToReadyScreenTime = 120 -- when no players on server, it automatically returns to ready screen
-GM.FirstSpawnAsSpectator = true
+GM.FirstSpawnAsSpectator = true -- TODO: add cvar for it
+
+cvars.AddChangeCallback("hl1_coop_sandbox", function(cvar, old, new)
+	ChatMessage("Sandbox mode setting has been changed, restart in 5 seconds", 0)
+	timer.Simple(5, function()
+		RunConsoleCommand("changelevel", game.GetMap())
+	end)
+end)
 
 concommand.Add("unload", function(ply)
 	if IsValid(ply) then

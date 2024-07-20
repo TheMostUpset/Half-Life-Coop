@@ -52,12 +52,6 @@ if cvar_sandbox:GetBool() then
 	DeriveGamemode("sandbox")
 	GM.Name = "Half-Life Sandbox"
 end
-cvars.AddChangeCallback("hl1_coop_sandbox", function(cvar, old, new)
-	ChatMessage("Sandbox mode setting has been changed, restart in 5 seconds", 0)
-	timer.Simple(5, function()
-		RunConsoleCommand("changelevel", game.GetMap())
-	end)
-end)
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
