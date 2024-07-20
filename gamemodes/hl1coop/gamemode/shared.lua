@@ -822,6 +822,15 @@ function GM:ApplyViewModelHands(ply, wep, forceModelChange)
 			end
 		end
 	end
+	if IsValid(wep) and wep.IsHL1Base and wep:IsHDEnabled() then
+		wep:ApplyHDViewModel()
+		if forceModelChange then
+			local vm = ply:GetViewModel()
+			if IsValid(vm) and vm:GetModel() != wep.ViewModel then
+				vm:SetModel(wep.ViewModel)
+			end
+		end
+	end
 end
 
 function GM:PlayerSwitchWeapon(ply, oldWep, newWep)
