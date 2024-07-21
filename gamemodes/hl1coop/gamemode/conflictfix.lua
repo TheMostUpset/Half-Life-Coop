@@ -71,6 +71,9 @@ local function RemoveShittyHooks()
 		hook.Remove("InitPostEntity", "sm") -- my goodness...
 		hook.Remove("PostCleanupMap", "sm")
 		hook.Remove("Think", "InfiniteAmmo")
+		hook.Remove("EntityTakeDamage", "ASMSetupDamage") -- popular addon that creates an error
+		hook.Remove("Think", "NoMineZ")
+		hook.Remove("OnEntityCreated", "QE_CrossfireTankMortarFix")
 	end
 	
 end
