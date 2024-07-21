@@ -818,13 +818,13 @@ function GM:ApplyViewModelHands(ply, wep, forceModelChange)
 			end
 		end
 	end
-	hook.Run("ApplyHDViewModel", wep, ply)
+	hook.Run("ApplyHDViewModel", wep, ply, forceModelChange)
 end
 
-function GM:ApplyHDViewModel(wep, ply)
+function GM:ApplyHDViewModel(wep, ply, force)
 	if IsValid(wep) and wep.IsHL1Base and wep:IsHDEnabled() then
 		wep:ApplyHDViewModel()
-		if forceModelChange then
+		if force then
 			local vm = ply:GetViewModel()
 			if IsValid(vm) and vm:GetModel() != wep.ViewModel then
 				vm:SetModel(wep.ViewModel)
