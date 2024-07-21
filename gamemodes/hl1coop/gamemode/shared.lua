@@ -66,6 +66,7 @@ GM.Changelog = [[- Added 1 HP mode
 - Added ability to respawn for score in survival mode
 - Added new viewbob style: Serious Sam
 - Added hl1coop_npcrepl_ichthyosaur convar
+- Added hl1_coop_sv_forcejoin convar
 - Added hl1_coop_sv_waitcloak convar
 - Added Break input and OnBreak output on func_pushable
 - Added support for custom lang files

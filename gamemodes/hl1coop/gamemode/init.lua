@@ -279,9 +279,9 @@ local cvar_assistpoints = CreateConVar("hl1_coop_sv_assistpoints", 1, FCVAR_NOTI
 local cvar_checkpoints = CreateConVar("hl1_coop_sv_checkpoints", 1, FCVAR_NOTIFY, "Enable co-op checkpoints", 0, 1)
 local cvar_unreadykicktime = CreateConVar("hl1_coop_sv_unreadykicktime", 60, FCVAR_ARCHIVE, "Time in seconds to kick unready player in lobby", 0, 999)
 cvar_waitcloak = CreateConVar("hl1_coop_sv_waitcloak", 1, FCVAR_ARCHIVE, "Make players transparent when touching wait triggers", 0, 1)
+local cvar_forcejoin = CreateConVar("hl1_coop_sv_forcejoin", 0, FCVAR_ARCHIVE, "New players will immediately join the game instead of being spectators", 0, 1)
 
 GM.ReturnToReadyScreenTime = 120 -- when no players on server, it automatically returns to ready screen
-GM.FirstSpawnAsSpectator = true -- TODO: add cvar for it
 
 cvars.AddChangeCallback("hl1_coop_sandbox", function(cvar, old, new)
 	ChatMessage("Sandbox mode setting has been changed, restart in 5 seconds", 0)
@@ -1150,7 +1150,7 @@ function GM:PlayerInitialSpawn(ply)
 			end
 		end
 	end
-	if !self.IsSandboxDerived and GAMEMODE.FirstSpawnAsSpectator and self:IsCoop() and !ply:IsBot() and !ply.SpawnedAsSpectator and ply:GetNWInt("Status") == 0 then
+	if !self.IsSandboxDerived and !cvar_forcejoin:GetBool() and self:IsCoop() and !ply:IsBot() and !ply.SpawnedAsSpectator and ply:GetNWInt("Status") == 0 then
 		ply:SetTeam(TEAM_SPECTATOR)
 		hook.Run("PlayerSpawnAsSpectator", ply)
 		ply.SpawnedAsSpectator = true
