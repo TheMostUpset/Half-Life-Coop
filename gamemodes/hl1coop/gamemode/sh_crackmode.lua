@@ -74,6 +74,19 @@ function GM:CrackModeWeaponSwitch(wep)
 	end
 end
 
+function GM:CrackModePlayerHitGround(ply, bInWater, bOnFloater, flFallSpeed)
+	local groundEnt = ply:GetGroundEntity()
+	if IsValid(groundEnt) and groundEnt:IsNPC() and !GAMEMODE:IsImportantNPC(groundEnt) then
+		local pos = math.floor(flFallSpeed * .01)
+		if pos > 0 then
+			groundEnt:SetPos(groundEnt:GetPos() - Vector(0,0,pos))
+		end
+	end
+	if math.random(0, 10) == 0 then
+		ply:SetVelocity(Vector(0,0,flFallSpeed))
+	end
+end
+
 if SERVER then
 
 	-- manipulating these bones makes HL1 NPCs invisible

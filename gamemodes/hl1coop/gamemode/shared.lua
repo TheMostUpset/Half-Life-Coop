@@ -437,6 +437,9 @@ function GM:OnPlayerHitGround(ply, bInWater, bOnFloater, flFallSpeed)
 	elseif game.SinglePlayer() then
 		ply:SendLua("LocalPlayer().GroundHitSpeed = "..ply:GetVelocity():Length2D())
 	end
+	if self:GetCrackMode() then
+		hook.Run("CrackModePlayerHitGround", ply, bInWater, bOnFloater, flFallSpeed)
+	end
 end
 
 --[[function GM:CalcMainActivity( ply, velocity )
