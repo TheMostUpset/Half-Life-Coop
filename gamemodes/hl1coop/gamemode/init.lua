@@ -1473,9 +1473,8 @@ function GM:GameRestart()
 end
 
 function GM:GameOver(skipfade, reason)
-	--[[for k, v in pairs(player.GetAll()) do
-		v:Freeze(true)
-	end]]
+	local gameOverTimer = "GameRestartTimer"
+	if timer.Exists(gameOverTimer) then return end
 	self:SetCoopState(COOP_STATE_GAMEOVER)
 	if !skipfade then
 		reason = reason or ""
@@ -1483,7 +1482,7 @@ function GM:GameOver(skipfade, reason)
 		net.WriteString(reason)
 		net.Broadcast()
 	end
-	timer.Create("GameRestartTimer", 4, 1, function()
+	timer.Create(gameOverTimer, 4, 1, function()
 		hook.Run("GameRestart")
 	end)
 end
@@ -2851,6 +2850,8 @@ function GM:OnNPCKilled(npc, attacker, inflictor)
 		npc:MarkRemovedForTransition()
 	end
 	
+	CallMapHook("OnNPCKilled", npc, attacker, inflictor)
+	
 	if self:GetCrackMode() then
 		hook.Run("CrackModeNPCKilled", npc, attacker, inflictor)
 	end
@@ -2935,10 +2936,8 @@ function GM:EntityTakeDamage(ent, dmginfo)
 	
 	if MAP.ImportantNPCs and self:IsCoop() and ent:IsNPC() then
 		if IsValid(attacker) and attacker:IsPlayer() then
-			for k, v in pairs(MAP.ImportantNPCs) do
-				if ent:GetName() == v then
-					return true
-				end
+			if ent:IsImportantNPC() then
+				return true
 			end
 		end
 	end

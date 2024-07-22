@@ -744,6 +744,17 @@ function GM:FindUseEntity(ply, ent)
 	return ent
 end
 
+function GM:IsImportantNPC(npc)
+	if MAP.ImportantNPCs then
+		for k, v in pairs(MAP.ImportantNPCs) do
+			if npc:GetName() == v then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 local bulletFixEnts = {
 	["func_tank"] = true,
 	["monster_sentry"] = true,

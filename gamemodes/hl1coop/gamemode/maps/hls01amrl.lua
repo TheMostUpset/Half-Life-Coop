@@ -10,6 +10,10 @@ MAP.StartingWeapons = false
 MAP.DisallowSurvivalMode = true
 MAP.npcLagFixDisabled = true
 
+local importantNPCtable = {"airlockbarney", "ctrlsci3", "test_airlock_sci1", "test_airlock_sci2"}
+MAP.ImportantNPCs = {}
+table.Merge(MAP.ImportantNPCs, importantNPCtable)
+
 function MAP:CreateViewPoints()
 	GAMEMODE:CreateViewPointEntity(Vector(1900, 3325, 915), Angle(10, 45, 0))
 	GAMEMODE:CreateViewPointEntity(Vector(1380, 3100, 926), Angle(5, -50, 0))
@@ -89,14 +93,36 @@ function MAP:ModifyMapEntities()
 end
 
 function MAP:OperateMapEvents(ent, input, caller)
-	if IsValid(ent) and ent:GetClass() == "func_door" and ent:GetName() == "tldoor" and input == "Open" and GAMEMODE:IsCoop() then
+	local class, name = ent:GetClass(), ent:GetName()
+	if IsValid(ent) and class == "func_door" and name == "tldoor" and input == "Open" and GAMEMODE:IsCoop() then
 		ent:SetNotSolid(true)
 	end
-	if ent:GetClass() == "multi_manager" and ent:GetName() == "probe_arm_mm" and input == "Trigger" then
+	if class == "multi_manager" and name == "probe_arm_mm" and input == "Trigger" then
 		local pushClip = ents.Create("hl1_pushableclip")
 		if IsValid(pushClip) then
 			pushClip:Spawn()
 			pushClip:SetCollisionBoundsWS(Vector(1365, 664, -384), Vector(1340, 576, -300))
+		end
+	end
+	if class == "func_door" and input == "Open" then
+		if name == "lk1" then
+			table.RemoveByValue(self.ImportantNPCs, "airlockbarney")
+		elseif name == "retinal_scanner_door3" then
+			table.RemoveByValue(self.ImportantNPCs, "ctrlsci3")
+		elseif name == "tldoor" then
+			table.RemoveByValue(self.ImportantNPCs, "test_airlock_sci1")
+			table.RemoveByValue(self.ImportantNPCs, "test_airlock_sci2")
+		end
+	end
+end
+
+local killSentences = {"SC_PLFEAR0", "SC_FEAR0", "SC_SCREAM0", "SC_SCREAM1", "SC_SCREAM2", "SC_SCREAM3"}
+function MAP:OnNPCKilled(npc, attacker)
+	if attacker:IsPlayer() and GAMEMODE:IsImportantNPC(npc) then
+		for k, v in ipairs(ents.FindInSphere(npc:GetPos(), 256)) do
+			if v:GetClass() == "monster_scientist" or v:GetClass() == "monster_sitting_scientist" then
+				EmitSentence(killSentences[math.random(1, #killSentences)], v:GetPos(), v:EntIndex(), CHAN_VOICE, 1, 90)
+			end
 		end
 	end
 end
@@ -138,5 +164,6 @@ function MAP:OnSuitPickup(ply, suitEnt)
 end
 
 function MAP:OnMapRestart()
+	if self.ImportantNPCs then table.Merge(self.ImportantNPCs, importantNPCtable) end
 	self.NoSuitOnSpawn = true
 end
