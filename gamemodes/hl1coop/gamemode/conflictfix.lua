@@ -39,6 +39,7 @@ local function RemoveShittyHooks()
 		hook.Remove("HUDPaint", "HP_lootSystem") -- breaks startup screen
 		hook.Remove("HUDPaint", "DropWeapon_BindNag")
 	else
+		concommand.Remove("hl1_impulse101") -- removing this from SWEPs because here we have different weapon classnames
 		hook.Remove("Think", "Splode") -- breaks explosions
 		hook.Remove("Think", "CheckForENVExplosion") -- same
 		hook.Remove("Think", "SPSThink")
