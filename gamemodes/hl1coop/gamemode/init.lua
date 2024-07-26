@@ -1032,11 +1032,15 @@ function GM:RestartMap()
 	LAST_CHECKPOINT_NUMBER = nil
 	self.RemovedMapEntities = nil
 	game.CleanUpMap(nil, nil, function()
-		hook.Run("InitPostEntity", true)
-		CallMapHook("OnMapRestart")
+		hook.Run("PostRestartMap")
 	end)
 	
 	hook.Run("CheckForShittyAddons")
+end
+
+function GM:PostRestartMap()
+	hook.Run("InitPostEntity", true)
+	CallMapHook("OnMapRestart")
 end
 
 function GM:GetFallDamage(ply, flFallSpeed)
