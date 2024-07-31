@@ -104,9 +104,6 @@ end
 
 function MAP:OperateMapEvents(ent, input, caller)
 	local class, name = ent:GetClass(), ent:GetName()
-	if class != "env_texturetoggle" and class != "path_corner" then
-		print(ent, name, input, caller)
-	end
 	if class == "scripted_sentence" and name == "ctrltalk1" and input == "BeginSentence" then
 		-- disabling announcement system during scripted sequence
 		ToggleSpeaker(false)

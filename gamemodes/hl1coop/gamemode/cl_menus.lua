@@ -1309,9 +1309,7 @@ GM.Menu = {}
 GM.LogoImage = "hl1coop_logo.png"
 GM.LogoImageSize = {320, 132}
 
-function GM:OpenMainMenu()
-	--showGameUI = false
-	
+function GM:OpenMainMenu()	
 	if IsValid(self.langSettings) and self.langSettings:IsVisible() then
 		self.langSettings:Remove()
 		return
@@ -2126,14 +2124,10 @@ function GM:ModelSelectionMenu()
 			ply:SetModel(model) -- doing this for just one frame to get bodygroups
 			local bodygroups = ply:GetBodyGroups()
 			local skinCount = ply:SkinCount()
-			-- PrintTable(bodygroups)
 			if skinCount > 1 or #bodygroups > 1 then
 				local properties = vgui.Create("DPanel", sheet)
 				properties:SetBackgroundColor(Color(50, 50, 50, 150))
 				properties_table = sheet:AddSheet("Properties", properties, "icon16/cog.png")
-				-- function sheet:OnActiveTabChanged(old, new)
-					-- print(new == properties_table.Tab)
-				-- end
 				if skinCount > 1 then
 					local skin = vgui.Create("DNumSlider", properties)
 					skin:SetText("Skin")
@@ -2141,7 +2135,7 @@ function GM:ModelSelectionMenu()
 					skin:SetMinMax(0, skinCount - 1)
 					skin:SetValue(cvars.Number("hl1_coop_cl_playermodel_skin"))
 					skin:Dock(TOP)
-					skin:DockMargin( 40, 16, 20, 0 )
+					skin:DockMargin(40, 16, 20, 0)
 					function skin:OnValueChanged(val)
 						ply.PreviewModelSkin = math.Round(val)
 					end
@@ -2153,12 +2147,12 @@ function GM:ModelSelectionMenu()
 						ply.PreviewModelBodygroups[v.id] = curVal
 						if v.num > 1 then
 							local bodygr = vgui.Create("DNumSlider", properties)
-							bodygr:SetText(v.name)
+							bodygr:SetText(string.NiceName(v.name))
 							bodygr:SetDecimals(0)
 							bodygr:SetMinMax(0, v.num - 1)
 							bodygr:SetValue(curVal)
 							bodygr:Dock(TOP)
-							bodygr:DockMargin( 40, 16, 20, 0 )
+							bodygr:DockMargin(40, 16, 20, 0)
 							function bodygr:OnValueChanged(val)
 								ply.PreviewModelBodygroups[v.id] = math.Round(val)
 							end
