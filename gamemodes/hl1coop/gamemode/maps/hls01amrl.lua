@@ -49,6 +49,16 @@ local function CreateSuitEntity(pos, ang)
 	end
 end
 
+local function ToggleSpeaker(on)
+	for k, v in pairs(ents.FindByClass("speaker")) do
+		if on then
+			v:TurnOn(math.Rand(3, 8))
+		else
+			v:TurnOff()
+		end
+	end
+end
+
 function MAP:ModifyMapEntities()
 	GAMEMODE:CreateCoopSpawnpoints(Vector(2554, 3534, 780), Angle(0, 180, 0))
 	
@@ -94,6 +104,16 @@ end
 
 function MAP:OperateMapEvents(ent, input, caller)
 	local class, name = ent:GetClass(), ent:GetName()
+	if class != "env_texturetoggle" and class != "path_corner" then
+		print(ent, name, input, caller)
+	end
+	if class == "scripted_sentence" and name == "ctrltalk1" and input == "BeginSentence" then
+		-- disabling announcement system during scripted sequence
+		ToggleSpeaker(false)
+	end
+	if class == "scripted_sequence" and name == "control_retinal" and input == "BeginSequence" then
+		ToggleSpeaker(true)
+	end
 	if IsValid(ent) and class == "func_door" and name == "tldoor" and input == "Open" and GAMEMODE:IsCoop() then
 		ent:SetNotSolid(true)
 	end
@@ -139,9 +159,7 @@ end
 function MAP:CreateMapEventCheckpoints(ent, activator, input)
 	if ent:GetName() == "test_lab_entry_door" and input == "Close" then
 		GAMEMODE:Checkpoint(2, Vector(1665, -100, -340), Angle(0, 90, 0), {tele1pos, tele2pos, tele3pos, tele4pos}, activator, "item_suit")
-		for k, v in pairs(ents.FindByClass("speaker")) do
-			v:TurnOff()
-		end
+		ToggleSpeaker(false)
 	end
 	if ent:GetName() == "portal_begin_mm" then
 		GAMEMODE:RemoveCoopSpawnpoints()
