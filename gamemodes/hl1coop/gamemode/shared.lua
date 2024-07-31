@@ -55,7 +55,7 @@ end
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.7 beta"
+GM.Version = "1.7"
 GM.Cooperative = true
 GM.Changelog = [[- Added 1 HP mode
 - Added German language (thanks to Christian Maubach)
@@ -70,6 +70,7 @@ GM.Changelog = [[- Added 1 HP mode
 - Added hl1_coop_sv_waitcloak convar
 - Added Break input and OnBreak output on func_pushable
 - Added support for custom lang files
+- Added support for HL SWEPs HD models
 - Reimagined lobby menu
 - Prices for respawn options moved to hl1_coop_price_* convars
 - F1-F4 keys do not rely on default gmod binds anymore
@@ -79,7 +80,7 @@ GM.Changelog = [[- Added 1 HP mode
 - Fixed not giving score for damaging Gonarch with shotgun
 - Fixed extra weapons not saving through levels
 - Fixed NPCs being invisible in Crack Mode
-- Minor fixes]]
+- Minor fixes and improvements]]
 
 cvar_price_respawn_here = CreateConVar("hl1_coop_price_respawn_here", 100, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, 'How much score "Respawn here with 25 hp" costs')
 cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn with full loadout costs")
