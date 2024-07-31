@@ -27,7 +27,7 @@ if GSRCHUD then
 	end)
 	
 	hook.Add('GSRCHUDFlashlight', HOOK_NAME, function()
-		if GetConVar('gmod_suit'):GetBool() or AUXPOW and AUXPOW:IsEnabled() then return end
+		if cvar_gmodsuit:GetBool() or AUXPOW and AUXPOW:IsEnabled() then return end
 		local ply = GSRCHUD.localPlayer()
 		return ply:GetFlashlightPower() * .01, ply:FlashlightIsOn(), false
 	end)

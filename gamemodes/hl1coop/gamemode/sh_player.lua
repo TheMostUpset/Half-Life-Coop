@@ -215,9 +215,20 @@ end
 function meta:GetLongJump()
 	return self:GetNW2Bool("LongJump")
 end
+
+function meta:UseSound(t)
+	if cvar_gmodsuit:GetBool() then return end
+	local snd
+	if t == 1 then
+		snd = "common/wpn_select.wav"
+	else
+		snd = "player/suit_denydevice.wav"
+	end
+	self:EmitSound(snd, 60, 100, .5)
+end
 	
 function meta:SetSuitUpdate(name, iNoRepeatTime, ignorecvar, customDuration)
-	if !ignorecvar and !cvar_hevvoice:GetBool() or cvars.Bool("gmod_suit") or !self:IsSuitEquipped() then return end
+	if !ignorecvar and !cvar_hevvoice:GetBool() or cvar_gmodsuit:GetBool() or !self:IsSuitEquipped() then return end
 
 	if self.HEVSentenceTable and self.HEVSentenceTable[name] and self.HEVSentenceTable[name] > CurTime() then return end
 	

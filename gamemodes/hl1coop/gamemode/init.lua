@@ -1351,7 +1351,6 @@ function GM:PlayerTick(ply, mv)
 	end
 end
 
-local cvar_gmodsuit = GetConVar("gmod_suit")
 function GM:FlashlightPowerThink(ply)
 	if (!ply.FlashlightPowerTime or ply.FlashlightPowerTime <= CurTime()) and ply:Alive() and !cvar_gmodsuit:GetBool() then
 		if ply:FlashlightIsOn() then

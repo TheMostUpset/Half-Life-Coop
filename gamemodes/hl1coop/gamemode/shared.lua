@@ -86,6 +86,7 @@ cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVA
 cvar_price_respawn_survival = CreateConVar("hl1_coop_price_respawn_survival", 400, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn in survival mode costs")
 cvar_price_movetocheckpoint = CreateConVar("hl1_coop_price_movetocheckpoint", 50, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score teleporting to last checkpoint costs")
 -- cvar_award_teammaterevive = CreateConVar("hl1_coop_award_teammaterevive", 50, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "")
+cvar_gmodsuit = GetConVar("gmod_suit")
 
 hl1_coop_sv_friendlyfire = CreateConVar("hl1_coop_sv_friendlyfire", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Allow friendly fire", 0, 1)
 local hl1_coop_sv_custommodels = CreateConVar("hl1_coop_sv_custommodels", 0, {FCVAR_ARCHIVE, FCVAR_REPLICATED, FCVAR_NOTIFY}, "Allow custom player models", 0, 1)
@@ -736,12 +737,12 @@ function GM:FindUseEntity(ply, ent)
 	end
 	if ply:KeyPressed(IN_USE) then
 		if IsValid(ent) and !entUseBlacklist[ent:GetClass()] then
-			ply:EmitSound("common/wpn_select.wav", 60, 100, .5)
+			ply:UseSound(1)
 			if MAP.NPCUseFix and ent:IsNPC() and MAP.NPCUseFix[ent:GetName()] then
 				return -- prevents script breaking
 			end
 		else
-			ply:EmitSound("player/suit_denydevice.wav", 60, 100, .5)
+			ply:UseSound()
 		end
 	end
 	return ent
