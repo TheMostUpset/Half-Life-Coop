@@ -101,8 +101,9 @@ function ENT:PlaySentence(sentence, flvolume, pitch, flags)
 	end
 end
 
-function ENT:TurnOn()
-	self:NextThink(CurTime() + 1)
+function ENT:TurnOn(nextSentenceTime)
+	nextSentenceTime = nextSentenceTime or 1
+	self:NextThink(CurTime() + nextSentenceTime)
 end
 
 function ENT:TurnOff()
