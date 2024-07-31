@@ -16,6 +16,7 @@
 			"type"		"CheckBox"
 			"default"	"0"
 			"singleplayer" "1"
+			"replicate"	"0"
 		}
 		2
 		{
@@ -24,8 +25,19 @@
 			"help"		"Survival mode with limited respawns"
 			"type"		"CheckBox"
 			"default"	"0"
+			"replicate"	"0"
 		}
 		3
+		{
+			"name"		"hl1_coop_mode_1hp"
+			"text"		"1 HP Mode"
+			"help"		"One HP mode - no medkits, no suit power"
+			"type"		"CheckBox"
+			"default"	"0"
+			"singleplayer" "1"
+			"replicate"	"0"
+		}
+		4
 		{
 			"name"		"hl1_coop_sv_custommodels"
 			"text"		"Custom player models"
@@ -34,23 +46,25 @@
 			"default"	"0"
 			"singleplayer" "1"
 		}
-		4
+		5
 		{
 			"name"		"hl1_coop_sv_chatsounds"
 			"text"		"Enable chatsounds"
 			"help"		""
 			"type"		"CheckBox"
 			"default"	"1"
+			"replicate"	"0"
 		}
-		5
+		6
 		{
 			"name"		"hl1_coop_sv_friendlyfire"
 			"text"		"Friendly fire"
 			"help"		"Allow friendly fire"
 			"type"		"CheckBox"
 			"default"	"0"
+			"replicate"	"0"
 		}
-		6
+		7
 		{
 			"name"		"hl1_coop_price_respawn_here"
 			"text"		"Price: Respawn with 25 hp"
@@ -58,7 +72,7 @@
 			"type"		"Numeric"
 			"default"	"100"
 		}
-		7
+		8
 		{
 			"name"		"hl1_coop_price_respawn_full"
 			"text"		"Price: Respawn with full loadout"
@@ -66,7 +80,7 @@
 			"type"		"Numeric"
 			"default"	"500"
 		}
-		8
+		9
 		{
 			"name"		"hl1_coop_price_movetocheckpoint"
 			"text"		"Price: Move to last checkpoint"
@@ -74,7 +88,7 @@
 			"type"		"Numeric"
 			"default"	"50"
 		}
-		9
+		10
 		{
 			"name"		"hl1_coop_price_respawn_survival"
 			"text"		"Price: Respawn in Survival mode"
