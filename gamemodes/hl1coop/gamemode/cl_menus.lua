@@ -177,7 +177,7 @@ function GM:AdminSettingsTable()
 		{"DLabel", "adminmenu_crackmode", "hl1_coop_mode_crack", 0},
 		{"DLabel", "adminmenu_gainnpchealth", "hl1_coop_sv_gainnpchealth", 1},
 		{"DNumSlider", "adminmenu_skilllevel", "hl1_coop_sv_skill", 2, 0, 1, 4},
-		{"DLabel", "[HL1 SWEPs] HD models", "hl1_sv_hdmodels", 0},
+		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wephdmodels"), "hl1_sv_hdmodels", 0},
 		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wepscreenshake"), "hl1_sv_explosionshake", 0},
 		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wepmprules"), "hl1_sv_mprules", 0},
 		{"DLabel", "[HL1 SWEPs] "..LangString("adminmenu_wepunlimitedammo"), "hl1_sv_unlimitedammo", 0},
