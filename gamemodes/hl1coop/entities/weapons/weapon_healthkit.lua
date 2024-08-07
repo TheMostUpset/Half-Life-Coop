@@ -50,8 +50,11 @@ SWEP.Secondary.Automatic	= false
 SWEP.SoundDeny				= Sound("WallHealth.Deny")
 SWEP.HealAmount				= 20
 
+local cvar_healowner = CreateConVar("hl1_coop_sv_medkit_healowner", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Heal the player holding a medkit, num HP/sec", 0, 100)
+
 function SWEP:SpecialDT()
 	self:NetworkVar("Float", 2, "RechargeTime")
+	self:NetworkVar("Float", 3, "RegenOwnerTime")
 end
 
 function SWEP:EquipSpecial(owner)
@@ -174,6 +177,15 @@ function SWEP:SpecialThink()
 	if self:Ammo1() < self.Primary.MaxAmmo and self:GetRechargeTime() < CurTime() then
 		self.Owner:SetAmmo(self:Ammo1() + 1, self.Primary.Ammo)
 		self:SetRechargeTime(self:GetRechargeTime() + 1)
+	end
+	local healAmount = cvar_healowner:GetInt()
+	if healAmount > 0 and self:Ammo1() > 0 and self:GetRegenOwnerTime() < CurTime() then
+		self:SetRegenOwnerTime(CurTime() + 1)
+		local ownerHP, maxHP = self.Owner:Health(), self.Owner:GetMaxHealth()
+		if ownerHP < maxHP then
+			local addHP = math.min(ownerHP + healAmount, maxHP)
+			self.Owner:SetHealth(addHP)
+		end
 	end
 end
 

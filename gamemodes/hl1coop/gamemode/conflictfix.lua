@@ -76,6 +76,9 @@ local function RemoveShittyHooks()
 		hook.Remove("EntityTakeDamage", "ASMSetupDamage") -- popular addon that creates an error
 		hook.Remove("Think", "NoMineZ")
 		hook.Remove("OnEntityCreated", "QE_CrossfireTankMortarFix")
+		hook.Remove("PlayerCanPickupItem", "ItemPickup")
+		hook.Remove("PlayerCanPickupWeapon", "WeaponPickup")
+		hook.Remove("PlayerUse", "HoldToPickup")
 	end
 	
 end

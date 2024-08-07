@@ -374,6 +374,7 @@ function GM:Initialize()
 	RunConsoleCommand("hl1_sv_clampammo", "1")
 	RunConsoleCommand("gmod_suit", "0")
 	RunConsoleCommand("func_breakdmg_club", "2")
+	-- RunConsoleCommand("sv_npc_full_pvs_checks", "0") -- potentially produces lags?
 	
 	timer.Simple(0, function()
 		hook.Run("SetSkillLevel")
@@ -2929,6 +2930,7 @@ end
 function GM:EntityTakeDamage(ent, dmginfo)
 	local attacker = dmginfo:GetAttacker()
 	local inflictor = dmginfo:GetInflictor()
+	
 	if IsValid(attacker) and attacker:IsPlayer() and IsValid(inflictor) and inflictor:GetClass() == "monster_mortar" and !IsValid(inflictor:GetOwner()) then
 		dmginfo:SetAttacker(inflictor)
 	end
@@ -2937,13 +2939,11 @@ function GM:EntityTakeDamage(ent, dmginfo)
 		ent:SetHealth(0)
 	end]]
 	
-	if MAP.ImportantNPCs and self:IsCoop() and ent:IsNPC() then
-		if IsValid(attacker) and attacker:IsPlayer() then
-			if ent:IsImportantNPC() then
-				return true
-			end
-		end
+	-- don't allow to damage important NPCs in coop, but allow in singleplayer
+	if MAP.ImportantNPCs and self:IsCoop() and ent:IsNPC() and IsValid(attacker) and attacker:IsPlayer() and self:IsImportantNPC(ent) then
+		return true
 	end
+	
 	if ent:GetName() == "tank_break_explob" then
 		if IsValid(attacker) and attacker:IsPlayer() then
 			attacker:AddScore(math.floor(dmginfo:GetDamage() / 1.5))

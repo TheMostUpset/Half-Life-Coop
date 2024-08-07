@@ -55,32 +55,10 @@ end
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.7"
+GM.Version = "1.7.1 beta"
 GM.Cooperative = true
-GM.Changelog = [[- Added 1 HP mode
-- Added German language (thanks to Christian Maubach)
-- Added bunch of subtitles for regular sentences
-- Added bodygroup options to player model selector
-- Added nicknames for connecting players
-- Added player nickname on their weaponbox
-- Added ability to respawn for score in survival mode
-- Added new viewbob style: Serious Sam
-- Added hl1coop_npcrepl_ichthyosaur convar
-- Added hl1_coop_sv_forcejoin convar
-- Added hl1_coop_sv_waitcloak convar
-- Added Break input and OnBreak output on func_pushable
-- Added support for custom lang files
-- Added support for HL SWEPs HD models
-- Reimagined lobby menu
-- Prices for respawn options moved to hl1_coop_price_* convars
-- F1-F4 keys do not rely on default gmod binds anymore
-- Fixed some health chargers not working
-- Fixed taking falldamage at the beginning of hls09
-- Fixed Gonarch spit always hitting trigger_gravity on hls14a
-- Fixed not giving score for damaging Gonarch with shotgun
-- Fixed extra weapons not saving through levels
-- Fixed NPCs being invisible in Crack Mode
-- Minor fixes and improvements]]
+GM.Changelog = [[- Added hl1_coop_sv_medkit_healowner convar
+- Fixed lua error when damaging NPCs]]
 
 cvar_price_respawn_here = CreateConVar("hl1_coop_price_respawn_here", 100, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, 'How much score "Respawn here with 25 hp" costs')
 cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn with full loadout costs")
@@ -478,7 +456,7 @@ end]]
 function GM:PlayerFootstep(ply, pos, foot, sound, volume, filter)
 	if CLIENT and ply != LocalPlayer() then
 		local vel = ply:GetActAbsVelocity()
-		if vel:Length() == 0 then
+		if vel:IsZero() then
 			return true
 		end
 	end
@@ -569,6 +547,20 @@ end
 local PLAYER_LONGJUMP_SPEED = 350
 local DOLONGJUMP
 
+local function DoCrouchTrace(origin, endpos)
+	endpos = endpos or Vector()
+	local plyTable = player.GetAll()
+	local tr = util.TraceHull({
+		start = origin,
+		endpos = origin + endpos,
+		filter = plyTable,
+		mask = MASK_PLAYERSOLID,
+		mins = Vector(-16, -16, 0),
+		maxs = Vector(16, 16, 72)
+	})
+	return tr
+end
+
 function GM:SetupMove(ply, move, cmd)
 	if hook.Run("ShouldLockMovement") then
 		move:SetMaxClientSpeed(0.1)
@@ -576,39 +568,18 @@ function GM:SetupMove(ply, move, cmd)
 	end
 
 	if ply:Alive() and ply:GetMoveType() == MOVETYPE_WALK and !ply:OnGround() and ply:WaterLevel() < 1 then
-		local plyTable = player.GetAll()
-		local tr = util.TraceHull({
-			start = move:GetOrigin(),
-			endpos = move:GetOrigin(),
-			filter = plyTable, -- is it ok to do this
-			mask = MASK_PLAYERSOLID,
-			mins = Vector(-16, -16, 0),
-			maxs = Vector(16, 16, 72)
-		})
+		local tr = DoCrouchTrace(move:GetOrigin())
 		if !tr.Hit then
+			local crouchOffset = Vector(0,0,16)
 			if !ply:Crouching() and cmd:KeyDown(IN_DUCK) then
-				tr = util.TraceHull({
-					start = move:GetOrigin(),
-					endpos = move:GetOrigin() - Vector(0,0,16),
-					filter = plyTable,
-					mask = MASK_PLAYERSOLID,
-					mins = Vector(-16, -16, 0),
-					maxs = Vector(16, 16, 72)
-				})
+				tr = DoCrouchTrace(move:GetOrigin(), -crouchOffset)
 				move:SetOrigin(tr.HitPos)
 				if tr.Hit then
-					move:SetOrigin(move:GetOrigin() - Vector(0,0,16))
+					move:SetOrigin(move:GetOrigin() - crouchOffset)
 				end
 			end
 			if ply:Crouching() and move:KeyReleased(IN_DUCK) then
-				tr = util.TraceHull({
-					start = move:GetOrigin(),
-					endpos = move:GetOrigin() + Vector(0,0,16),
-					filter = plyTable,
-					mask = MASK_PLAYERSOLID,
-					mins = Vector(-16, -16, 0),
-					maxs = Vector(16, 16, 72)
-				})
+				tr = DoCrouchTrace(move:GetOrigin(), crouchOffset)
 				move:SetOrigin(tr.HitPos)
 			end
 		end
