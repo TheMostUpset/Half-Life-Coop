@@ -55,7 +55,7 @@ end
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.7.1 beta"
+GM.Version = "1.7.1"
 GM.Cooperative = true
 GM.Changelog = [[- Added hl1_coop_sv_medkit_healowner convar
 - Fixed lua error when damaging NPCs]]
