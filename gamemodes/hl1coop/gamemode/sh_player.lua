@@ -129,8 +129,8 @@ function meta:SetupPlayerModel()
 		util.PrecacheModel(modelname)
 		self:SetModel(modelname)
 		
-		local cl_skin = self:GetInfo("hl1_coop_cl_playermodel_skin")
-		if tonumber(cl_skin) >= self:SkinCount() then
+		local cl_skin = self:GetInfoNum("hl1_coop_cl_playermodel_skin", 0)
+		if cl_skin >= self:SkinCount() then
 			self:ConCommand("hl1_coop_cl_playermodel_skin 0")
 			self:SetSkin(0)
 		else
