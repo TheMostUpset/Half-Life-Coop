@@ -2316,14 +2316,33 @@ function GM:OpenServerSettings()
 	backgr:SetBackgroundColor(menuBackgroundColor)
 	
 	local adminsettingscvars = hook.Run("AdminSettingsTable")
+	local adminsettingscvarsCustom = hook.Run("HL1_AdminSettingsCustom")
+	if adminsettingscvarsCustom then
+		table.Add(adminsettingscvars, adminsettingscvarsCustom)
+	end
 	
 	for k, v in pairs(adminsettingscvars) do
 		local k = vgui.Create(v[1], backgr)
 		k:SetText(LangString(v[2]))
 		if v[1] == "DNumSlider" then
-			k:SetDecimals(v[5])
+			local defValue = 0
+			local decimals = v[5]
+			if v[3] == "hl1_coop_sv_skill" then
+				defValue = GAMEMODE:GetSkillLevel()
+			else
+				-- for replicated convars
+				local cvar = GetConVar(v[3])
+				if cvar then
+					if decimals > 0 then
+						defValue = cvar:GetFloat()
+					else
+						defValue = cvar:GetInt()
+					end
+				end
+			end
+			k:SetDecimals(decimals)
 			k:SetMinMax(v[6], v[7])
-			k:SetValue(GAMEMODE:GetSkillLevel())
+			k:SetValue(defValue)
 			function k:OnValueChanged(value)
 				RunServerCommand(v[3], math.Round(value))
 			end

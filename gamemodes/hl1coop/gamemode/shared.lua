@@ -55,10 +55,9 @@ end
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.7.1"
+GM.Version = "1.7.2 beta"
 GM.Cooperative = true
-GM.Changelog = [[- Added hl1_coop_sv_medkit_healowner convar
-- Fixed lua error when damaging NPCs]]
+GM.Changelog = [[]]
 
 cvar_price_respawn_here = CreateConVar("hl1_coop_price_respawn_here", 100, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, 'How much score "Respawn here with 25 hp" costs')
 cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn with full loadout costs")

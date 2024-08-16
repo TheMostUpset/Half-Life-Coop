@@ -118,6 +118,12 @@ GM.NPCScorePrice = {
 	["npc_vj_hlr1a_bullsquid"] = 120,
 }
 
+GM.NPCScoreForDamage = {
+	["monster_apache"] = true,
+	["monster_osprey"] = true,
+	["monster_gargantua"] = {"hornet", "ent_hl1_hornet"},
+}
+
 GM.NPCScorePriceDamageMul = {
 	["monster_apache"] = 1,
 	["monster_osprey"] = 1,
@@ -2883,11 +2889,6 @@ monsterDeadTable = {
 	["monster_scientist_dead"] = true,
 }
 
-local scoreForDamage = {
-	["monster_apache"] = true,
-	["monster_osprey"] = true,
-	["monster_gargantua"] = {"hornet", "ent_hl1_hornet"},
-}
 local function InflictorInBlacklist(t, inflictor)
 	if t == true or !IsValid(inflictor) then return end
 
@@ -2974,7 +2975,7 @@ function GM:EntityTakeDamage(ent, dmginfo)
 		if ent:Health() > 0 and attacker:IsPlayer() then
 			hook.Run("CreateAssistTable", ent, dmginfo)
 		end
-		local dmgScore = scoreForDamage[ent:GetClass()]
+		local dmgScore = self.NPCScoreForDamage[ent:GetClass()]
 		if dmgScore then
 			if IsValid(attacker) and attacker:IsPlayer() and !InflictorInBlacklist(dmgScore, inflictor) then
 				local score = dmginfo:GetDamage() / 2.5
