@@ -2779,6 +2779,14 @@ function GM:OnDamagedByExplosion(ply, dmginfo)
 	return true
 end
 
+function GM:OnPlayerRevivedWithMedkit(ply, reviver)
+	local hp = math.min(ply:GetMaxHealth(), 25)
+	ply:SetHealth(hp)
+	ply:SetArmor(0)
+	ply:EmitSound("Weapon_Gauss.Zap1")
+	reviver:AddScore(50)
+end
+
 function GM:OnNPCKilled(npc, attacker, inflictor)
 	if !IsValid(inflictor) then inflictor = attacker end
 	if IsValid(inflictor) and inflictor == attacker and (inflictor:IsPlayer() or inflictor:IsNPC()) then

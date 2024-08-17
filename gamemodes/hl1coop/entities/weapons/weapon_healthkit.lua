@@ -248,12 +248,7 @@ net.Receive("HL1MedkitRevivePlayer", function(len, ply)
 		end
 		
 		pl:SetPos(pos)
-		local hp = math.min(pl:GetMaxHealth(), 25)
-		pl:SetHealth(hp)
-		pl:SetArmor(0)
-		pl:EmitSound("Weapon_Gauss.Zap1")
-		
-		ply:AddScore(50)
+		hook.Run("OnPlayerRevivedWithMedkit", pl, ply)
 		if IsValid(wep) then
 			wep:SendWeaponAnim(ACT_VM_PRIMARYATTACK)
 			wep:SetRechargeTime(CurTime() + 3)
