@@ -40,6 +40,7 @@ function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_FLYGRAVITY)
 	self:SetMoveCollide(MOVECOLLIDE_FLY_BOUNCE)
 	self:SetSolid(SOLID_NONE)
+	self:SetSolidFlags(FSOLID_NOT_SOLID)
 	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 
 	self:SetTrigger(true)
