@@ -316,7 +316,7 @@ if SERVER then
 
 	local cvar_wboxstay = CreateConVar("hl1_coop_sv_wboxstay", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Players cannot pickup other's weaponbox")
 
-	function meta:SetupMovementParams()
+	function meta:SetupMovementParams(noWarning)
 		local runspeed, walkspeed = 160, 320
 		local gravity = GetConVarNumber("sv_gravity")
 		local jumppower = math.sqrt(2 * gravity * 45.0)
@@ -327,13 +327,15 @@ if SERVER then
 		self:SetDuckSpeed(.4)
 		self:SetUnDuckSpeed(.15)
 		
-		timer.Simple(1, function()
-			if IsValid(self) then
-				if self:GetWalkSpeed() != walkspeed or self:GetRunSpeed() != runspeed or math.floor(self:GetJumpPower()) != math.floor(jumppower) then
-					PrintMessage(HUD_PRINTTALK, "Warning! Movement has been changed by some addon! Expect issues!")
+		if !noWarning then
+			timer.Simple(1, function()
+				if IsValid(self) then
+					if self:GetWalkSpeed() != walkspeed or self:GetRunSpeed() != runspeed or math.floor(self:GetJumpPower()) != math.floor(jumppower) then
+						PrintMessage(HUD_PRINTTALK, "Warning! Movement has been changed by some addon! Expect issues!")
+					end
 				end
-			end
-		end)
+			end)
+		end
 	end
 
 	function meta:AddScore(n, text)
