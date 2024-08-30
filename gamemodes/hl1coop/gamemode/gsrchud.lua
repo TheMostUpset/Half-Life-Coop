@@ -89,6 +89,24 @@ if GSRCHUD then
 			end
 		end
 	end
+	if Q2HUD then
+		local oldFunc = Q2HUD.Config.IsEnabled
+		function Q2HUD.Config:IsEnabled()
+			if cvar_huddisable:GetBool() then
+				return oldFunc(self)
+			else
+				return false
+			end
+		end
+		local oldFunc = Q2HUD.Config.DeathScreenEnabled
+		function Q2HUD.Config:DeathScreenEnabled()
+			if IsValid(LocalPlayer()) and !LocalPlayer():IsSpectator() then
+				return oldFunc(self)
+			else
+				return false
+			end
+		end
+	end
 end
 
 if HL1AHUD then
