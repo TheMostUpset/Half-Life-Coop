@@ -129,6 +129,13 @@ function MAP:FixMapEntities()
 	if GAMEMODE:GetSkillLevel() > 3 then
 		FixCrates()
 	end
+	for k, v in ipairs(ents.FindByClass("ambient_generic")) do
+		local snd = v:GetInternalVariable("message")
+		if string.find(snd, "weapons/explode") then
+			snd = string.gsub(snd, "weapons/explode", "hl1/weapons/explode")
+			v:SetSaveValue("message", snd)
+		end
+	end
 end
 
 local expTrig
