@@ -23,6 +23,13 @@ ENT.Presets = {
 	[12] = {"C3A2_", 7}
 }
 
+ENT.AmbientPresets = {
+	["WILD"] = 12,
+	["ROCKET"] = 6,
+	["FAR_WAR"] = 16,
+	["NEAR_WAR"] = 12,
+}
+
 function ENT:KeyValue(k, v)
 	--print(k, v)
 	if k == "preset" then
@@ -32,20 +39,17 @@ function ENT:KeyValue(k, v)
 		self.message = v
 	end
 	if k == "delaymin" then
+		self.delaymin = tonumber(v)
 	end
 	if k == "delaymax" then
+		self.delaymax = tonumber(v)
 	end
-	if k == "radius" then
-	end
+	-- if k == "radius" then
+		-- self.radius = tonumber(v)
+	-- end
 end
 
 function ENT:Initialize()
-	for k, v in pairs(ents.FindByClass("speaker")) do
-		if k != 1 then -- leaving only one speaker on a map
-			v:Remove()
-		end
-	end
-
 	self:SetSolid(SOLID_NONE)
 	self:SetMoveType(MOVETYPE_NONE)
 
@@ -58,7 +62,12 @@ function ENT:Initialize()
 		self.SentenceName = self.Presets[self.m_preset][1]
 		self.SentenceCount = self.Presets[self.m_preset][2]
 	elseif self.message then
-		self.SentenceName = string.Split(self.message, " ")
+		-- self.SentenceName = string.Split(self.message, " ")
+		local ambientCount = self.AmbientPresets[self.message]
+		if ambientCount then
+			self.SentenceName = self.message
+			self.SentenceCount = ambientCount
+		end
 	end
 end
 
@@ -75,14 +84,30 @@ function ENT:Think()
 	
 	-- local flattenuation = 0.3
 	
-	--if string.StartWith(self.SentenceName, "!") then
-	if self.SentenceCount then		
-		// make random announcement from sentence group
-		local rand = math.random(0, self.SentenceCount)
-		self:PlaySentence(self.SentenceName..rand)
-		self:NextThink(CurTime() + math.Rand(ANNOUNCE_MINUTES_MIN * 60.0, ANNOUNCE_MINUTES_MAX * 60.0))
+	if string.StartWith(self.SentenceName, "!") then
+		-- play regular sentence
+		local flvolume = self:Health() * 0.1
+		EmitSentence(self.SentenceName, self:GetPos(), self:EntIndex(), CHAN_VOICE, flvolume, 120, 0, 100)
+		self:Remove()
+	else
+		if self.SentenceCount then
+			// make random announcement from sentence group
+			local rand = math.random(0, self.SentenceCount)
+			if self.m_preset and self.m_preset > 0 then -- if BMAS
+				self:PlaySentence(self.SentenceName..rand)
+				self:NextThink(CurTime() + math.Rand(ANNOUNCE_MINUTES_MIN * 60.0, ANNOUNCE_MINUTES_MAX * 60.0))
+			elseif self.message then -- if ambient sounds
+				local flvolume = self:Health() * 0.1
+				EmitSentence(self.SentenceName..rand, self:GetPos(), self:EntIndex(), CHAN_VOICE, flvolume, 120, 0, 100)
+				if self.delaymin and self.delaymax then
+					-- original code didn't use these values, but let's try
+					self:NextThink(CurTime() + math.Rand(self.delaymin, self.delaymax))
+				else
+					self:NextThink(CurTime() + math.Rand(ANNOUNCE_MINUTES_MIN * 60.0, ANNOUNCE_MINUTES_MAX * 60.0))
+				end
+			end
+		end
 	end
-
 	return true
 end
 

@@ -57,7 +57,8 @@ GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
 GM.Version = "1.7.2 beta"
 GM.Cooperative = true
-GM.Changelog = [[]]
+GM.Changelog = [[- Restored ambient sounds on some maps
+- Minor fixes]]
 
 cvar_price_respawn_here = CreateConVar("hl1_coop_price_respawn_here", 100, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, 'How much score "Respawn here with 25 hp" costs')
 cvar_price_respawn_full = CreateConVar("hl1_coop_price_respawn_full", 500, {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "How much score respawn with full loadout costs")

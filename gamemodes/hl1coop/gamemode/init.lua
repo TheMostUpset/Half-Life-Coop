@@ -565,6 +565,19 @@ function GM:InitPostEntity(restart)
 		v:Remove()
 	end
 	
+	 -- leaving only one announcement system speaker on a map
+	local speaker_bmas = {}
+	for k, v in ipairs(ents.FindByClass("speaker")) do
+		if v.m_preset and v.m_preset > 0 then
+			table.insert(speaker_bmas, v)
+		end
+	end
+	for k, v in ipairs(speaker_bmas) do
+		if k != 1 then
+			v:Remove()
+		end
+	end
+	
 	-- fix for spawning items from breakables
 	local breakables = {}
 	table.Add(breakables, ents.FindByClass("func_breakable"))
