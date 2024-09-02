@@ -373,6 +373,10 @@ HL1Maps = {
 	["t0a0d"] = "hls_hc",
 }
 
+function IsUnsupportedMap()
+	return HL1Maps[game.GetMap()]
+end
+
 local warn_cvar = CreateClientConVar("hl1_coop_cl_nocontentwarning", 0, true, false, "Don't show content warning window", 0, 1)
 
 local function HLSContentCheck(delay)
@@ -412,7 +416,7 @@ function GM:InitPostEntity()
 	net.SendToServer()
 	--LocalPlayer().afkTime = RealTime()
 	
-	if HL1Maps[game.GetMap()] then
+	if IsUnsupportedMap() then
 		self:ReadFuckingDescription()
 		return
 	end
@@ -476,7 +480,7 @@ function GM:Think()
 		print("InitPostEntity called from Think!")
 	end
 	
-	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD and !self:IsStartMenuOpen() and !self:IsLanguageMenuOpen() and !gui.IsGameUIVisible() then
+	if GAMEMODE:GetCoopState() == COOP_STATE_FIRSTLOAD and !self:IsStartMenuOpen() and !self:IsLanguageMenuOpen() and !gui.IsGameUIVisible() and !IsUnsupportedMap() then
 		hook.Run("OpenStartMenu")
 	end
 
@@ -484,10 +488,11 @@ function GM:Think()
 		HLSContentCheck(3)
 	end
 
-	if !self:GetCrackMode() then return end
-	for _, npc in ipairs(ents.FindByClass("monster_*")) do
-		if npc:IsNPC() then
-			hook.Run("CrackModeNPCThink", npc)
+	if self:GetCrackMode() then
+		for _, npc in ipairs(ents.FindByClass("monster_*")) do
+			if npc:IsNPC() then
+				hook.Run("CrackModeNPCThink", npc)
+			end
 		end
 	end
 end
