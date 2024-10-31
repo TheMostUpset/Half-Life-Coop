@@ -612,17 +612,17 @@ function GM:SetupMove(ply, move, cmd)
 	end
 	
 	-- gravity prediction fix
-	if SERVER then
-		local grav = ply:GetGravity()
-		if grav != ply:GetNWFloat("Gravity") then
-			ply:SetNWFloat("Gravity", grav)
-		end
-	else
-		local grav = ply:GetNWFloat("Gravity")
-		if grav != ply:GetGravity() then
-			ply:SetGravity(grav)
-		end
-	end
+	-- if SERVER then
+		-- local grav = ply:GetGravity()
+		-- if grav != ply:GetNWFloat("Gravity") then
+			-- ply:SetNWFloat("Gravity", grav)
+		-- end
+	-- else
+		-- local grav = ply:GetNWFloat("Gravity")
+		-- if grav != ply:GetGravity() then
+			-- ply:SetGravity(grav)
+		-- end
+	-- end
 end
 
 function GM:FinishMove(ply, move)
