@@ -55,7 +55,7 @@ end
 
 GM.Author = "Upset"
 GM.Email = "themostupset@gmail.com"
-GM.Version = "1.7.2 beta"
+GM.Version = "1.7.2"
 GM.Cooperative = true
 GM.Changelog = [[- Restored ambient sounds on some maps
 - Minor fixes]]
@@ -585,7 +585,7 @@ function GM:SetupMove(ply, move, cmd)
 		end
 	end
 
-	-- barnacle
+	-- barnacle fix
 	if ply:GetMoveType() == MOVETYPE_FLY then
 		ply:SetMoveType(MOVETYPE_NONE)
 		move:SetVelocity(Vector(0,0,0))
